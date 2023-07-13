@@ -1,7 +1,7 @@
 const express = require("express");
 const path = require("path");
 const app = express();
-const { setCode, doRequest, options } = require("./src/services/getToken.js")
+const getTokenService = require("./src/services/getToken.js")
 
 const PORT = 3000;
 
@@ -18,10 +18,11 @@ app.get("/", (req, res) => {
 })
 
 app.get("/auth", (req, res) => {
-    console.log(req.query)
     const code = req.query.code;
-    console.log(code);  
-    setCode(code);
-    doRequest(options);
+    const client_secret = getTokenService.getClientSecret();
+    const requestOptions = getTokenService.setRequest(code, client_secret);
+
+    getTokenService.doRequest(requestOptions, getTokenService.callback);
+
     res.render("index.ejs");
 })
