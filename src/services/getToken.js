@@ -1,6 +1,7 @@
 // Imports
 let request = require('request');
-const saveTokenService = require("./saveToken.js");
+let dbConnector = require("../controllers/dbConnector.js");
+let getAccountDataService = require("../services/getAccountData.js");
 
 // Variables
 let code = "";
@@ -19,6 +20,7 @@ function getClientSecret(){
     return client_secret;
 }
 
+// Configuracion de peticion
 function setRequest(code, client_secret) {
     const APP_ID = "4080755184952911";
     const REDIRECT = "http://localhost:3000/auth";
@@ -47,8 +49,15 @@ function callback(error, response, body) {
     const responseJSON = JSON.parse(body);
 
     if(responseJSON.access_token){
-        saveTokenService.setAccessToken(responseJSON.access_token);
-        saveTokenService.setRefreshToken(responseJSON.refresh_token);
+        // Ya tenemos los access_token, refresh_token y user_id
+        let access_token = responseJSON.access_token;
+        let refresh_token = responseJSON.refresh_token;
+        let user_id = responseJSON.user_id;
+        let user = 1;
+        console.log("Almacenamos token");
+        dbConnector.saveUserData(access_token, refresh_token, user_id, user);
+
+        // getAccountDataService.getUserData(access_token, user_id);
     }
 }
 

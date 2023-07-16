@@ -10,7 +10,7 @@ function setLinkState(value){
 
 function showLinkState(value){
     const span = document.querySelector(".link_state");
-    value ? span.innerHTML = "Vinculado" : span.innerHTML = "(No vinculada)";
+    //value ? span.innerHTML = "Vinculando..." : span.innerHTML = "(No vinculada)";
 }
 
 document.querySelector(".button__link").addEventListener("click", () => {
