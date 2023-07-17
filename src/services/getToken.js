@@ -44,7 +44,7 @@ function setRequest(code, client_secret) {
 function callback(error, response, body) {
     if (error) throw error;
     
-    console.log(response.statusCode);
+    console.log("Resultado de obtener token: " + response.statusCode);
 
     const responseJSON = JSON.parse(body);
 
