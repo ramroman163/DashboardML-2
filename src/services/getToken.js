@@ -1,11 +1,14 @@
 // Imports
 let request = require('request');
 let dbConnector = require("../controllers/dbConnector.js");
-let getAccountDataService = require("../services/getAccountData.js");
 
 // Variables
 let code = "";
 let client_secret = "sKAwWnBSHRH4Plg2UmAvPnPYHg9NL9fZ";
+
+
+let rta;
+
 
 function setCode(value) {
     code = value;
@@ -56,13 +59,46 @@ function callback(error, response, body) {
         let user = 1;
         console.log("Almacenamos token");
         dbConnector.saveUserData(access_token, refresh_token, user_id, user);
-
-        // getAccountDataService.getUserData(access_token, user_id);
     }
+    //console.log('TEST: =>' + responseJSON.access_token);
+    rta = responseJSON.access_token;
+}
+
+async function asyncCallback(error, response, body) {
+    if (error) throw error;
+    console.log("Resultado de obtener token: " + response.statusCode);
+    const responseJSON = JSON.parse(body);
+
+    if (responseJSON.access_token) {
+        // Ya tenemos los access_token, refresh_token y user_id
+        let access_token = responseJSON.access_token;
+        let refresh_token = responseJSON.refresh_token;
+        let user_id = responseJSON.user_id;
+        let user = 1;
+        console.log("Almacenamos token");
+        await dbConnector.saveUserData(access_token, refresh_token, user_id, user);
+        return responseJSON;
+    } else {
+        throw new Error("Sin access token");
+    }
+}
+
+function doAsyncRequest(requestOptions, asyncRequestCallback) {
+    return new Promise((resolv, reject) => {
+        request(requestOptions, (error, response, body) => {
+            asyncRequestCallback(error, response, body)
+                .then((value) => resolv(value))
+                .catch((error) => reject(error))
+        });
+    });
 }
 
 function doRequest(requestOptions, requestCallback) {
     request(requestOptions, requestCallback);
+}
+
+function printRta(){
+    console.log(rta)
 }
 
 module.exports.getCode = getCode;
@@ -71,3 +107,8 @@ module.exports.getClientSecret = getClientSecret;
 module.exports.setRequest = setRequest;
 module.exports.callback = callback;
 module.exports.doRequest = doRequest;
+// module.exports.rta = rta;
+module.exports.printRta = printRta;
+
+module.exports.doAsyncRequest = doAsyncRequest;
+module.exports.asyncCallback = asyncCallback;

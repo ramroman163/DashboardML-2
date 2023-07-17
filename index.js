@@ -34,8 +34,21 @@ app.get("/auth", async (req, res) => {
     const client_secret = getTokenService.getClientSecret();
     const requestOptions = getTokenService.setRequest(code, client_secret);
 
-    await getTokenService.doRequest(requestOptions, getTokenService.callback);
+    try {
+        const resp = await getTokenService.doAsyncRequest(requestOptions, getTokenService.asyncCallback);
+        console.log(resp);
+    } catch (err) {
+        console.log(err);
+    }
+
+    //console.log('ALEDRIN =>' + resp);
+
+    //await getTokenService.doRequest(requestOptions, getTokenService.callback);
+
+    //let variable = await getTokenService.rta;
     
+    //getTokenService.printRta();
+
     const id = 1;
     const sql_query = `SELECT token FROM ml_sellers WHERE usuario = "${id}"`;
     
@@ -46,7 +59,7 @@ app.get("/auth", async (req, res) => {
         }
 
         let cantidadTokens = result.length;
-        console.log("# Cantidad de tokens: " + cantidadTokens);
+        //console.log("# Cantidad de tokens: " + cantidadTokens);*/
         const access_token = result[cantidadTokens-1].token;
 
         console.log("# Token obtenido de consulta: " + access_token);
@@ -77,7 +90,11 @@ app.get("/auth", async (req, res) => {
                 res.render("index.ejs", {state: "Acceso invalido"});
             }
         });
+
+        
     })
+
+
 })
 
 app.get("/sync", async (req, res) => {
