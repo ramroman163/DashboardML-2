@@ -45,7 +45,7 @@ function setRequest(code, client_secret) {
 
     return options;
 }
-
+/*
 function callback(error, response, body) {
     if (error) throw error;
     
@@ -67,7 +67,7 @@ function callback(error, response, body) {
     }
     //console.log('TEST: =>' + responseJSON.access_token);
     //rta = responseJSON.access_token; (checkThisComment)
-}
+}*/
 
 async function asyncCallback(error, response, body) {
     //versión asincrona del callback
@@ -116,7 +116,7 @@ module.exports.getCode = getCode;
 module.exports.setCode = setCode;
 module.exports.getClientSecret = getClientSecret;
 module.exports.setRequest = setRequest;
-module.exports.callback = callback;
+// module.exports.callback = callback; checkThisComment
 //module.exports.doRequest = doRequest; checkThisComment
 // module.exports.rta = rta;
 // module.exports.printRta = printRta; (checkThisComment)

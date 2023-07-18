@@ -1,37 +1,21 @@
-// let request = require('request');
+const dbController = require("../controllers/dbConnector.js");
 
-// // function getUserData(access_token, user_id){
-// //     const requestUserOptions = setRequest(access_token, user_id);
-// //     doRequest(requestUserOptions, callback);
-// // }
-
-// function setRequest(access_token, user_id) {
-//     const URL = `https://api.mercadolibre.com/users/${user_id}`;
-
-//     let HEADERS = {
-//         'Authorization': `Bearer ${access_token}`
-//     };
-
-//     let options = {
-//         url: URL,
-//         headers: HEADERS
-//     };
-
-//     return options;
-// }
-
-// function callback(error, response, body) {
-//     if (error) throw error;
-//     const responseJSON = JSON.parse(body);
-//     if(responseJSON.nickname){
-//         console.log(responseJSON);
-//     }
-// }
-
-// function doRequest(requestOptions, callback) {
-//     request(requestOptions, callback);
-// }
-
-// module.exports.setRequest = setRequest;
-// module.exports.callback = callback;
-// module.exports.doRequest = doRequest;
+function getSellerInfo(id){
+    return new Promise((resolv, reject) => {
+        const sql_query = `SELECT token, seller_id FROM ml_sellers WHERE usuario = "${id}"`;
+    
+        dbController.connectDbDashboard.query(sql_query, (err, result, filed) => {
+            if(err){
+                console.error(err);
+                reject(err);
+            } else {
+                let cantidadTokens = result.length;             
+                const userInfo = result[cantidadTokens-1];
+                
+                console.log("# Token y ID obtenido de consulta: " + userInfo.token, + " " + userInfo.seller_id);
+                
+                resolv(userInfo);
+            }
+        })
+    })
+}

@@ -1,26 +1,36 @@
 // Imports
 
-// //import routing
+// // Import routing
 const express = require("express");
 const path = require("path");
-const request = require('request');
+const request = require("request");
+const session = require("express-session")
 
-// //import our files
+// // Import our files
 const getTokenService = require("./src/services/getToken.js")
 const getPublicationsService = require("./src/services/getPublications.js");
 
-// //import our DB controller
+// // Import our DB controller
 const dbController = require("./src/controllers/dbConnector.js");
 
 // Constantes
-const PORT = 3000; //puerto de DB
-const app = express();  //aplicación básica de express
+const PORT = 3000; // Puerto de app
+const app = express();  // Aplicación básica de express
+
+// Sesion 
+
+app.use(session({
+    // Mas adelante utilizamos una propiedad token
+    secret: "mi_secreto",
+    resave: false,
+    saveUninitialized: true
+}))
 
 // Seteamos motor de vistas y rutas
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "src/views"));
 app.use(express.static(path.join(__dirname, "src/views-js")));
-//el uso de path nos permite que esto corra tanto en windows como linux, debe contener un "__dirname"
+// El uso de path nos permite que esto corra tanto en windows como linux, debe contener un "__dirname"
 
 
 // Iniciamos servidor
@@ -31,137 +41,110 @@ app.listen(PORT, () => {
 
 // Peticion a /
 app.get("/", (req, res) => {
-    res.render("index.ejs", {state: "No vinculado"});
+    res.render("index.ejs", { state: "No vinculado" });
 })
 
 // Peticion a /auth
 app.get("/auth", async (req, res) => {
-    
-    //denominamos getTokenService al file que maneja los datos del usuario
+
+    // Denominamos getTokenService al file que maneja los datos del usuario
     
     const code = req.query.code;
-    //getea el "code" de la URL (checkThisComment)
+    // Getea el "code" de la URL (checkThisComment)
     
     const client_secret = getTokenService.getClientSecret();
-    //retorna la variable preexistente client_secret
+    // Retorna la variable preexistente client_secret
 
     const requestOptions = getTokenService.setRequest(code, client_secret);
-    //armamos el request de datos del usuario
+    // Armamos el request de datos del usuario
 
+    try {   // Ejecutamos el request, usamos await y asincronia
+            // Para poder estructurar el código bien sin frenar los procesos
+        const tokenJSON = await getTokenService.doAsyncRequest(requestOptions, getTokenService.asyncCallback);
+        console.log("# Respuesta del getTokenService: ")
+        console.log(tokenJSON);
 
-    try {   //ejecutamos el request, usamos await y asincronia
-            //para poder estructurar el código bien sin frenar los procesos
-        const resp = await getTokenService.doAsyncRequest(requestOptions, getTokenService.asyncCallback);
-        console.log(resp);
-    } catch (err) {
-        console.log(err);
-    }
+        // Eliminamos variables locales y reemplazamos por variables de session
+        req.session.token = tokenJSON.access_token;
+        req.session.user_id = tokenJSON.user_id;
 
-    //console.log('macs =>' + resp);
-
-    //await getTokenService.doRequest(requestOptions, getTokenService.callback); (checkThiscomment)
-
-    //let variable = await getTokenService.rta;
-    
-    //getTokenService.printRta();
-
-    const id = 1; //usamos id = 1 porque nos estamos manejando con un solo usuario en la db
-    const sql_query = `SELECT token FROM ml_sellers WHERE usuario = "${id}"`;
-    //solicitamos a la db el token del usuario cuyo id coincida con nuestro usuario actual (1)
-
-
-    //conectamos a la base de datos
-    dbController.connectDbDashboard.query(sql_query, (error, result, filed) => {
-        if(error){
-            res.render("index.ejs", {state: "Error vinculando"});
-            throw error;
-
-            //si hay algún error se renderiza la página pero se setea el state a error de vinculación
-            //se throwea el error
-        }
-
-        let cantidadTokens = result.length; //geteamos la cantidad de tokens para despues llamar al último
-        //console.log("# Cantidad de tokens: " + cantidadTokens);*/
-        const access_token = result[cantidadTokens-1].token; //llamamos al último token almacenado
-
-        console.log("# Token obtenido de consulta: " + access_token); //control de estado de consulta
+        console.log("Session token: " + req.session.token);
+        /*
+        console.log("# Token obtenido: " + access_token); //control de estado de consulta
+        console.log("# User Id obtenido: " + user_id); //control de estado de consulta
+        */  
         const URL = "https://api.mercadolibre.com/users/me";
 
 
-
         let headers = {                                         // seteo y 
-            'Authorization': `Bearer ${access_token}`           // control 
+            'Authorization': `Bearer ${req.session.token}`           // control 
         };                                                      // de la 
         let options = {                                         // creación
-            url: URL,                                           // del paquet
+            url: URL,                                           // del paquete
             headers: headers                                    // HTTP
-        };                                                      // para solicitar
+        };                                                      // para setear
         console.log("# Opciones de request para nickname: ")    // las options
-        console.log(options);                                   // desde token
-        
-        
-        
+        console.log(options);                                   // de la request
+
+
         request(options, (error, response, body) => {
             
             if(error) throw error; //autoexplained
             
-            const responseJSON = JSON.parse(body); //no sé de donde sale el body, pero lo parseamos a JSON (checkThisComment)
-            if(responseJSON.nickname && response.statusCode == 200){ //si hay nickname y el statusCode es 200 (bien) 
-                res.render("index.ejs", {state: responseJSON.nickname}); //renderizar el index.ejs
+            const responseJSON = JSON.parse(body); // Parseamos a JSON el body de la respuesta
+            if(responseJSON.nickname && response.statusCode == 200){ // Si hay nickname y el statusCode es 200 (bien) 
+                res.render("index.ejs", {state: responseJSON.nickname}); // Renderizar el index.ejs
                 user = responseJSON.nickname;
                 return;
             }
             else{
-                console.log("# Respuesta de obtener nickname: "); //si no hay nombre o algo falla
-                console.log(responseJSON); //cargar en consola el responseJSON (en busca de encontrar los errores)
-                res.render("index.ejs", {state: "Acceso invalido"}); //renderizar con state Acceso inválido
+                console.log("# Respuesta de obtener nickname: "); // Si no hay nombre o da otro statusCode falla
+                console.log(responseJSON); // Cargar en consola el responseJSON (en busca de encontrar los errores)
+                res.render("index.ejs", {state: "Acceso invalido"}); // Renderizar con state Acceso inválido
             }
         });
-    })
+
+    } catch (err) {
+        res.render("index.ejs", { state: "Error vinculando" });
+        console.log(err);
+    }
 })
 
 app.get("/sync", async (req, res) => {
-    // const nickname = req.query.nickname;
-    const id = req.query.id;
-    const sql_query = `SELECT token, seller_id FROM ml_sellers WHERE usuario = "${id}"`;
-    
-    await dbController.connectDbDashboard.query(sql_query, (error, result, filed) => {
+    console.log("Session token en sync: " + req.session.token);
+    console.log("Session user_id en sync: " + req.session.user_id);
+
+    const requestOptionsPublications = getPublicationsService.setRequestPublications(req.session.token, req.session.user_id, "");
+        //seteamos una consulta de publicaciones con el token e id del usuario
+    console.log("Parameters publications: ");
+    console.log(requestOptionsPublications);
+
+    request(requestOptionsPublications, (error, response, body) => { //llevamos a cabo la consulta 
         if(error){
+            res.json({
+                result: "Ocurrió un error"
+            })
             throw error;
         }
 
-        let cantidadTokens = result.length;             //corregir
-        const userInfo = result[cantidadTokens-1];      //corregir
-        //ya tenemos el token en la variable access_token de index.js linea 85
+        const responsePublicationsJSON = JSON.parse(body); //pasamos el body a JSON
 
-        console.log("# Token y ID obtenido de consulta: " + userInfo.token, + " " + userInfo.seller_id);
+        if(response.statusCode == 200 && responsePublicationsJSON.results.length > 0){ //si sale todo bien y hay al menos una publicación
+            
+            res.json({
+                result: "Publicaciones vinculadas"
+            })
 
-        const requestOptionsPublications = getPublicationsService.setRequestPublications(userInfo.token, userInfo.seller_id);
-        //seteamos una consulta de publicaciones con el token e id del usuario
-
-        request(requestOptionsPublications, (error, response, body) => {
-            //llevamos a cabo la consulta 
-            if(error){
-                res.json({
-                    result: "Ocurrió un error"
-                })
-                throw error;
-            }
-
-            const responsePublicationsJSON = JSON.parse(body); //pasamos el body a JSON
-
-            if(response.statusCode == 200 && responsePublicationsJSON.results.length > 0){ //si sale todo bien y hay al menos una publicación
-                //console.log(responsePublicationsJSON);
-                res.json({
-                    result: "Publicaciones vinculadas"
-                })
-            }
-            else{
-                console.log("No hay productos para almacenar");
-                res.json({
-                    result: "No se encontraron productos"
-                })
-            }
-        })
+            // 1 Crear el almacenamiento en db
+            // 2 Loopear la consulta cambiando el scroll_id de requestOptionsPublications
+        }
+        else{
+            console.log("Respuesta de status pub: ")
+            console.log(response.statusCode);
+            console.log("No hay productos para almacenar");
+            res.json({
+                result: "No se encontraron productos"
+            })
+        }
     })
 })
