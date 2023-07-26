@@ -61,14 +61,14 @@ app.get("/auth", async (req, res) => {
     try {   // Ejecutamos el request, usamos await y asincronia
             // Para poder estructurar el código bien sin frenar los procesos
         const tokenJSON = await getTokenService.doAsyncRequest(requestOptions, getTokenService.asyncCallback);
-        console.log("# Respuesta del getTokenService: ")
-        console.log(tokenJSON);
+        // console.log("# Respuesta del getTokenService: ")
+        // console.log(tokenJSON);
 
         // Eliminamos variables locales y reemplazamos por variables de session
         req.session.token = tokenJSON.access_token;
         req.session.user_id = tokenJSON.user_id;
 
-        console.log("Session token: " + req.session.token);
+        // console.log("Session token: " + req.session.token);
         /*
         console.log("# Token obtenido: " + access_token); //control de estado de consulta
         console.log("# User Id obtenido: " + user_id); //control de estado de consulta
@@ -83,8 +83,8 @@ app.get("/auth", async (req, res) => {
             url: URL,                                           // del paquete
             headers: headers                                    // HTTP
         };                                                      // para setear
-        console.log("# Opciones de request para nickname: ")    // las options
-        console.log(options);                                   // de la request
+        //console.log("# Opciones de request para nickname: ")    // las options
+        //console.log(options);                                   // de la request
 
 
         request(options, (error, response, body) => {
@@ -113,38 +113,35 @@ app.get("/auth", async (req, res) => {
 app.get("/sync", async (req, res) => {
     console.log("Session token en sync: " + req.session.token);
     console.log("Session user_id en sync: " + req.session.user_id);
+    console.log("\n");
 
-    const requestOptionsPublications = getPublicationsService.setRequestPublications(req.session.token, req.session.user_id, "");
-        //seteamos una consulta de publicaciones con el token e id del usuario
-    console.log("Parameters publications: ");
-    console.log(requestOptionsPublications);
+    let publications = []
 
-    request(requestOptionsPublications, (error, response, body) => { //llevamos a cabo la consulta 
-        if(error){
-            res.json({
-                result: "Ocurrió un error"
-            })
-            throw error;
-        }
+    let scroll_id = ""
+    
+    while(true){
+        const requestOptionsPublications = getPublicationsService.setRequestPublications(req.session.token, req.session.user_id, scroll_id); //seteamos una consulta de publicaciones con el token e id del usuario
+        
+        responseRequestPublications = await getPublicationsService.doAsyncRequest(requestOptionsPublications, getPublicationsService.asyncCallback)
 
-        const responsePublicationsJSON = JSON.parse(body); //pasamos el body a JSON
+        // console.log("# Scroll id obtenido: " + responseRequestPublications.scroll_id)
+        scroll_id = responseRequestPublications.scroll_id;
 
-        if(response.statusCode == 200 && responsePublicationsJSON.results.length > 0){ //si sale todo bien y hay al menos una publicación
-            
-            res.json({
-                result: "Publicaciones vinculadas"
-            })
+        if(scroll_id == null || scroll_id == undefined) break;
 
-            // 1 Crear el almacenamiento en db
-            // 2 Loopear la consulta cambiando el scroll_id de requestOptionsPublications
-        }
-        else{
-            console.log("Respuesta de status pub: ")
-            console.log(response.statusCode);
-            console.log("No hay productos para almacenar");
-            res.json({
-                result: "No se encontraron productos"
-            })
-        }
-    })
+        publications = publications.concat(responseRequestPublications.publications_id);
+        
+    }
+
+    if(publications.length){
+        res.json({
+            "result": "Publicaciones obtenidas"
+        })
+    }
+    else{
+        res.json({
+            "result": "No se obtuvo ninguna publicación"
+        })
+    }
+
 })
