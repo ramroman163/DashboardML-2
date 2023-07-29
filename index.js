@@ -9,6 +9,7 @@ const session = require("express-session")
 // // Import our files
 const getTokenService = require("./src/services/getToken.js")
 const getPublicationsService = require("./src/services/getPublications.js");
+const getPublicationDataService = require("./src/services/getPublicationData.js")
 
 // // Import our DB controller
 const dbController = require("./src/controllers/dbConnector.js");
@@ -134,6 +135,15 @@ app.get("/sync", async (req, res) => {
     }
 
     if(publications.length){
+
+        publications.forEach(async (id) => {
+            const requestOptionsPublicationData = getPublicationDataService.setRequestDataPublications(req.session.token, id);
+            const statusCode = await getPublicationDataService.doAsyncRequest(requestOptionsPublicationData, getPublicationDataService.asyncCallback)
+
+            console.log(statusCode);
+        })
+
+
         res.json({
             "result": "Publicaciones obtenidas"
         })

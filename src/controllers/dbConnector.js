@@ -44,8 +44,8 @@ function saveUserData(access_token, refresh_token, user_id, user) {
 
 function savePublication(seller_id, item_id, title, status, sub_status, price, original_price, available_quantity, thumbnail, permalink, listing_type_id, logistic_type, self_service, free_shipping, mandatory_free_shipping, local_pick_up){
     return new Promise((resolv, reject) => {
-        const sql_query = `INSERT INTO ml_items (seller_id, item_id, title, status, sub_status, price, original_price, available_quantity, thumbnail, permalink, listing_type_id, logistic_type, self_service, free_shipping, mandatory_free_shipping, local_pick_up) VALUES 
-        (${seller_id}, ${item_id}, ${title}, "${status}", "${sub_status}", ${price}, ${original_price}, ${available_quantity}, ${thumbnail}, ${permalink}, ${listing_type_id}, ${logistic_type}, ${self_service}, ${free_shipping}, ${mandatory_free_shipping}, ${local_pick_up})`;
+        const sql_query = `INSERT INTO ml_items (id, usuario, seller_id, item_id, title, status, sub_status, price, original_price, available_quantity, thumbnail, permalink, listing_type_id, logistic_type, self_service, free_shipping, mandatory_free_shipping, local_pick_up) VALUES 
+        (${null}, ${1}, "${seller_id}", "${item_id}", "${title}", "${status}", "${sub_status}", ${price}, ${0}, ${available_quantity}, "${thumbnail}", "${permalink}", "${listing_type_id}", "${logistic_type}", ${0}, ${0}, ${0}, ${0})`;
         //Fijarse los tipos de datos
         connectorDbDashboard.query(sql_query, (err, result, filed) => {
             if (err) {
