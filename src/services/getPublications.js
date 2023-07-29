@@ -1,5 +1,7 @@
+// Imports
 let request = require('request');
 
+// Funcion para setear las options de la request
 function setRequestPublications(access_token, user_id, scroll_id){
 
     const headers = {
@@ -14,29 +16,30 @@ function setRequestPublications(access_token, user_id, scroll_id){
     return options;
 }
 
+// Callback asíncrono, donde parseamos el JSON y retornamos el scroll_id junto a los ids obtenidos
 async function asyncCallback(error, response, body){
     if(error) throw error;
 
-    const responsePublicationsJSON = JSON.parse(body); //pasamos el body a JSON
-
-    if(response.statusCode == 200 && responsePublicationsJSON.results.length > 0){ //si sale todo bien y hay al menos una publicación
-        // 1 Crear el almacenamiento en db
-        // 2 Loopear la consulta cambiando el scroll_id de requestOptionsPublications
-        // console.log("scroll calb: " + responsePublicationsJSON.scroll_id)
+    const responsePublicationsJSON = JSON.parse(body); // Pasamos el JSON del body a objeto
+    
+    // Si obtenemos un statusCode de 200 y hay al menos una publicación
+    if(response.statusCode == 200 && responsePublicationsJSON.results.length > 0){ 
+        // console.log("Scroll callback: " + responsePublicationsJSON.scroll_id) Línea para debug
         return {
             scroll_id: responsePublicationsJSON.scroll_id,
             publications_id: responsePublicationsJSON.results 
         }
     }
     else{
-        // console.log("Respuesta de status publications: ")
-        // console.log(response.statusCode);
+        // console.log("Respuesta de status publications: ") Línea para debug
+        // console.log(response.statusCode); Línea para debug
         return {
             scroll_id: null
         }
     }
 }
 
+// Funcion para llamar al request
 function doAsyncRequest(requestOptions, asyncRequestCallback) {     
     return new Promise((resolve, reject) => {                      
         request(requestOptions, (error, response, body) => {      

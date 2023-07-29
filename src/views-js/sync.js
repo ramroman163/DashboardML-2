@@ -7,6 +7,7 @@ buttonSync.addEventListener("click", async () => {
 
     let urlUser = `http://localhost:3000/sync?id=${1}&nickname=${userLinked}`;
     
+    // Realizamos una peticion al servidor para que este realice la sincronización
     fetch(urlUser)
     .then(response => response.json())
     .then(data => statusSync.innerHTML = data.result);

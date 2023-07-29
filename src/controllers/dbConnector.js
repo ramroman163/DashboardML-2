@@ -20,10 +20,6 @@ const connectDb = () => {
     })
 }
 
-// 1- await Hacer consulta a ML
-// 2- await Guardar algo en la DB
-// 3- Responder al usuario
-
 // Almacenar información de usuario
 function saveUserData(access_token, refresh_token, user_id, user) {
     return new Promise((resolv, reject) => {
@@ -42,11 +38,13 @@ function saveUserData(access_token, refresh_token, user_id, user) {
     });
 }
 
+// Almacenar información de publicación
 function savePublication(seller_id, item_id, title, status, sub_status, price, original_price, available_quantity, thumbnail, permalink, listing_type_id, logistic_type, self_service, free_shipping, mandatory_free_shipping, local_pick_up){
+    // self_service no lo encontramos en el json, lo dejamos con un 0
     return new Promise((resolv, reject) => {
         const sql_query = `INSERT INTO ml_items (id, usuario, seller_id, item_id, title, status, sub_status, price, original_price, available_quantity, thumbnail, permalink, listing_type_id, logistic_type, self_service, free_shipping, mandatory_free_shipping, local_pick_up) VALUES 
-        (${null}, ${1}, "${seller_id}", "${item_id}", "${title}", "${status}", "${sub_status}", ${price}, ${0}, ${available_quantity}, "${thumbnail}", "${permalink}", "${listing_type_id}", "${logistic_type}", ${0}, ${0}, ${0}, ${0})`;
-        //Fijarse los tipos de datos
+        (${null}, ${1}, "${seller_id}", "${item_id}", "${title}", "${status}", "${sub_status}", ${price}, ${original_price}, ${available_quantity}, "${thumbnail}", "${permalink}", "${listing_type_id}", "${logistic_type}", ${0}, ${free_shipping}, ${mandatory_free_shipping}, ${local_pick_up})`;
+        
         connectorDbDashboard.query(sql_query, (err, result, filed) => {
             if (err) {
                 console.error(err);
