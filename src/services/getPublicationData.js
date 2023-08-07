@@ -18,7 +18,7 @@ function setRequestDataPublications(access_token, publication_id){
 }
 
 // Callback asíncrono, donde parseamos el JSON y almacenamos la data de la publicacion
-async function asyncCallback(error, response, body){
+async function asyncCallback(error, response, body, user){
     if(error) throw error;
     
     const responsePublicationDataJSON = JSON.parse(body); // Pasamos el JSON a un objeto
@@ -43,7 +43,7 @@ async function asyncCallback(error, response, body){
         const mandatory_free_shipping = responsePublicationDataJSON[0].body.mandatory_free_shipping === undefined ? responsePublicationDataJSON[0].body.shipping.free_shipping : responsePublicationDataJSON[0].body.mandatory_free_shipping
         const local_pick_up = responsePublicationDataJSON[0].body.shipping.local_pick_up
         // LLamamos al servicio para almacenar la informacion
-        await dbConnector.savePublication(seller_id, item_id, title, status, sub_status, price, original_price, available_quantity, 
+        await dbConnector.savePublication(user, seller_id, item_id, title, status, sub_status, price, original_price, available_quantity, 
             thumbnail, permalink, listing_type_id, logistic_type, self_service, free_shipping, mandatory_free_shipping, local_pick_up)
         
         return response.statusCode;
@@ -54,15 +54,15 @@ async function asyncCallback(error, response, body){
 }
 
 // Funcion para llamar al request
-function doAsyncRequest(requestOptions, asyncRequestCallback) {     
+function doAsyncRequest(requestOptions, asyncRequestCallback, user) {     
     return new Promise((resolve, reject) => {                      
         request(requestOptions, (error, response, body) => {      
-            asyncRequestCallback(error, response, body)             
+            asyncRequestCallback(error, response, body, user)             
                 .then((value) => resolve(value))                    
                 .catch((error) => reject(error))                   
         });                                                         
     });                                                            
-}  
+}
 
 module.exports = {
     setRequestDataPublications: setRequestDataPublications,

@@ -10,6 +10,7 @@ const session = require("express-session")
 const getTokenService = require("./src/services/getToken.js")
 const getPublicationsService = require("./src/services/getPublications.js");
 const getPublicationDataService = require("./src/services/getPublicationData.js")
+const getUserDataService = require("./src/services/getUserData.js")
 
 // // Importamos nuestro controlador de BD
 const dbController = require("./src/controllers/dbConnector.js");
@@ -61,21 +62,31 @@ app.get("/auth", async (req, res) => {
 
     try {   // Ejecutamos el request usando await y asincronia,
             // para poder estructurar el código bien sin frenar los procesos
-        const tokenJSON = await getTokenService.doAsyncRequest(requestOptions, getTokenService.asyncCallback);
+        await getTokenService.doAsyncRequest(requestOptions, getTokenService.asyncCallback);
         
         // console.log("# Respuesta del getTokenService: ") Línea para debug
         // console.log(tokenJSON); Línea para debug
 
         // Eliminamos variables locales y reemplazamos por variables de session
-        req.session.token = tokenJSON.access_token;
-        req.session.user_id = tokenJSON.user_id;
+        //req.session.token = tokenJSON.access_token;
+        //req.session.seller_id = tokenJSON.user_id;
+        //req.session.refresh_token = tokenJSON.refresh_token;
+
+        req.session.user = 1;
+        console.log("# Return del getUserData: ")
+        const userData = await getUserDataService.getToken(req.session.user);
+        console.log(userData)
+
+        const access_token = userData[0].token;
+        const refresh_token = userData[0].refresh_token;
+        const seller_id = userData[0].seller_id;
 
         // console.log("# Session token: " + req.session.token); Línea para debug
           
         const URL = "https://api.mercadolibre.com/users/me";
 
         let headers = {                                         // seteo y 
-            'Authorization': `Bearer ${req.session.token}`      // control 
+            'Authorization': `Bearer ${access_token}`      // control 
         };                                                      // de la 
         let options = {                                         // creación
             url: URL,                                           // del paquete
@@ -112,36 +123,75 @@ app.get("/auth", async (req, res) => {
     }
 })
 
-app.get("/sync", async (req, res) => {
-    console.log("Session token en sync: " + req.session.token); // Línea para debug
-    console.log("Session user_id en sync: " + req.session.user_id); // Línea para debug
-    console.log("\n"); // Línea para debug
+app.get("/sync", async (req, res) => { 
+    //console.log("Session token en sync: " + req.session.token); // Línea para debug
+    //console.log("Session seller_id en sync: " + req.session.seller_id); // Línea para debug
+    //console.log("\n"); // Línea para debug
+
+    console.log("# Return del getUserData en SYNC: ")
+    const userData = await getUserDataService.getToken(req.session.user);
+    console.log(userData)
+    let access_token = userData[0].token;
+    console.log(`AT: ${userData[0].token}`)
+    let refresh_token = userData[0].refresh_token;
+    console.log(`RT: ${userData[0].refresh_token}`)
+    let seller_id = userData[0].seller_id;
+    console.log(`UD: ${userData[0].seller_id}`)
 
     let publications = [] // Array que contendrá los id de publicaciones
 
     let scroll_id = "" // Variable que almacenará el scroll_id una vez obtenido
     
     while(true){
-        const requestOptionsPublications = getPublicationsService.setRequestPublications(req.session.token, req.session.user_id, scroll_id); 
-        // Seteamos las opciones de la consulta de publicaciones con el token e id del usuario
-        // Aclaramos que en la primera iteración del bucle el scroll_id será un string vacio ""
-        
-        // Realizamos la consulta y obtener un objeto con el scroll_id y los id de publicaciones obtenidas
-        responseRequestPublications = await getPublicationsService.doAsyncRequest(requestOptionsPublications, getPublicationsService.asyncCallback)
+        try{
+            console.log("Entro al while")
+            const requestOptionsPublications = getPublicationsService.setRequestPublications(access_token, seller_id, scroll_id); 
+            // Seteamos las opciones de la consulta de publicaciones con el token e id del usuario
+            // Aclaramos que en la primera iteración del bucle el scroll_id será un string vacio ""
+            
+            // Realizamos la consulta y obtener un objeto con el scroll_id y los id de publicaciones obtenidas
+            responseRequestPublications = await getPublicationsService.doAsyncRequest(requestOptionsPublications, getPublicationsService.asyncCallback)
+            
+            if(responseRequestPublications.statusCode == 403 || responseRequestPublications.statusCode == 400){
+                console.log('tiró un error esperado');
+                //throw new Error('invalidTokenException');
+                // console.log("ME DIO TOKEN INVALIDO")
+                // REVISAR TODO ESTO!!!
+                const requestOptionsRefresh = getTokenService.setRequestRefresh(getTokenService.getClientSecret(), refresh_token)
+                
+                const responseRefreshToken = await getTokenService.doAsyncRequestRefresh(requestOptionsRefresh, getTokenService.asyncCallbackRefresh, req.session.user);
+                console.log('no sé')
+                access_token = responseRefreshToken.access_token;
+                refresh_token =  responseRefreshToken.refresh_token;
+                seller_id =  responseRefreshToken.seller_id;
+            }
+            console.log('no sé')
+            scroll_id = responseRequestPublications.scroll_id; // Seteamos el scroll_id
 
-        scroll_id = responseRequestPublications.scroll_id; // Seteamos el scroll_id
+            if(scroll_id == null || scroll_id == undefined) break; // Cuando no hay más paginación salimos del bucle
 
-        if(scroll_id == null || scroll_id == undefined) break; // Cuando no hay más paginación salimos del bucle
+            // Concatenamos los ids obtenidos con los existentes
+            publications = publications.concat(responseRequestPublications.publications_id); 
+        } catch (error){
+            if (error == 'invalidTokenException') { 
+                console.log("ME DIO TOKEN INVALIDO")
+                const requestOptionsRefresh = getTokenService.setRequestRefresh(getTokenService.getClientSecret(), refresh_token)
+                
+                const responseRefreshToken = getTokenService.doAsyncRequestRefresh(requestOptionsRefresh, getTokenService.asyncCallbackRefresh, req.session.user);
 
-        // Concatenamos los ids obtenidos con los existentes
-        publications = publications.concat(responseRequestPublications.publications_id); 
+                access_token = responseRefreshToken.access_token;
+                refresh_token =  responseRefreshToken.refresh_token;
+                seller_id =  responseRefreshToken.seller_id;
+            }
+        } 
+
     }
 
     if(publications.length){ // Si tenemos ids, realizamos las consultas para obtener la informacion y guardarla en la BD
 
         publications.forEach(async (id) => {
-            const requestOptionsPublicationData = getPublicationDataService.setRequestDataPublications(req.session.token, id);
-            const statusCode = await getPublicationDataService.doAsyncRequest(requestOptionsPublicationData, getPublicationDataService.asyncCallback)
+            const requestOptionsPublicationData = getPublicationDataService.setRequestDataPublications(access_token, id);
+            const statusCode = await getPublicationDataService.doAsyncRequest(requestOptionsPublicationData, getPublicationDataService.asyncCallback, req.session.user)
 
             console.log(statusCode);
         })
@@ -157,3 +207,6 @@ app.get("/sync", async (req, res) => {
     }
 
 })
+
+
+

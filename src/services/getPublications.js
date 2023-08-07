@@ -21,11 +21,12 @@ async function asyncCallback(error, response, body){
     if(error) throw error;
 
     const responsePublicationsJSON = JSON.parse(body); // Pasamos el JSON del body a objeto
-    
+    console.log(responsePublicationsJSON);
     // Si obtenemos un statusCode de 200 y hay al menos una publicación
     if(response.statusCode == 200 && responsePublicationsJSON.results.length > 0){ 
         // console.log("Scroll callback: " + responsePublicationsJSON.scroll_id) Línea para debug
         return {
+            statusCode: responsePublicationsJSON.statusCode,
             scroll_id: responsePublicationsJSON.scroll_id,
             publications_id: responsePublicationsJSON.results 
         }
@@ -34,6 +35,7 @@ async function asyncCallback(error, response, body){
         // console.log("Respuesta de status publications: ") Línea para debug
         // console.log(response.statusCode); Línea para debug
         return {
+            statusCode: response.statusCode,
             scroll_id: null
         }
     }
