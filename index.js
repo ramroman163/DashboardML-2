@@ -124,13 +124,19 @@ app.get("/auth", async (req, res) => {
 })
 
 app.get("/sync", async (req, res) => { 
-    //console.log("Session token en sync: " + req.session.token); // Línea para debug
-    //console.log("Session seller_id en sync: " + req.session.seller_id); // Línea para debug
-    //console.log("\n"); // Línea para debug
+
+    if(!req.session.user){
+        res.json({
+            "result": "Tenés que iniciar sesión primero" // Respuesta que se envía al js del index
+        })
+        
+        return;
+    }
+    
 
     console.log("# Return del getUserData en SYNC: ")
     const userData = await getUserDataService.getToken(req.session.user);
-    console.log(userData)
+
     let access_token = userData[0].token;
     console.log(`AT: ${userData[0].token}`)
     let refresh_token = userData[0].refresh_token;
@@ -145,27 +151,36 @@ app.get("/sync", async (req, res) => {
     while(true){
         try{
             console.log("Entro al while")
-            const requestOptionsPublications = getPublicationsService.setRequestPublications(access_token, seller_id, scroll_id); 
             // Seteamos las opciones de la consulta de publicaciones con el token e id del usuario
             // Aclaramos que en la primera iteración del bucle el scroll_id será un string vacio ""
+            const requestOptionsPublications = getPublicationsService.setRequestPublications(access_token, seller_id, scroll_id); 
             
             // Realizamos la consulta y obtener un objeto con el scroll_id y los id de publicaciones obtenidas
             responseRequestPublications = await getPublicationsService.doAsyncRequest(requestOptionsPublications, getPublicationsService.asyncCallback)
             
             if(responseRequestPublications.statusCode == 403 || responseRequestPublications.statusCode == 400){
-                console.log('tiró un error esperado');
-                //throw new Error('invalidTokenException');
-                // console.log("ME DIO TOKEN INVALIDO")
-                // REVISAR TODO ESTO!!!
+                console.log(`# Se obtuvo un status code de ${responseRequestPublications.statusCode} en publications`);
+                
                 const requestOptionsRefresh = getTokenService.setRequestRefresh(getTokenService.getClientSecret(), refresh_token)
                 
-                const responseRefreshToken = await getTokenService.doAsyncRequestRefresh(requestOptionsRefresh, getTokenService.asyncCallbackRefresh, req.session.user);
-                console.log('no sé')
-                access_token = responseRefreshToken.access_token;
-                refresh_token =  responseRefreshToken.refresh_token;
-                seller_id =  responseRefreshToken.seller_id;
+                try {
+                    const responseRefreshToken = await getTokenService.doAsyncRequestRefresh(requestOptionsRefresh, getTokenService.asyncCallbackRefresh, req.session.user);
+                    if(responseRefreshToken.access_token){
+                        access_token = responseRefreshToken.access_token;
+                        refresh_token =  responseRefreshToken.refresh_token;
+                        seller_id =  responseRefreshToken.user_id;
+
+                        console.log(`AT: ${access_token} RT: ${refresh_token} UD: ${seller_id}`)
+                        continue;
+                    }
+                    else{
+                        throw new Error("No se obtuvo ningun access token en el refresh!")
+                    }
+                } catch (error) {
+                    continue;
+                }
             }
-            console.log('no sé')
+
             scroll_id = responseRequestPublications.scroll_id; // Seteamos el scroll_id
 
             if(scroll_id == null || scroll_id == undefined) break; // Cuando no hay más paginación salimos del bucle

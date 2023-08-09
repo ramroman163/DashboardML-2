@@ -75,13 +75,13 @@ function setRequestRefresh(client_secret, refresh_token) {
         'content-type': 'application/x-www-form-urlencoded'
     };
 
-    let dataString = `grant_type=refresh_token&client_id=${APP_ID}&client_secret=${client_secret}&refresh_token=${refresh_token};`;
-
+    let dataStringRefresh = `grant_type=refresh_token&client_id=${APP_ID}&client_secret=${client_secret}&refresh_token=${refresh_token}`;
+    
     let options = {
         url: 'https://api.mercadolibre.com/oauth/token',
         method: 'POST',
         headers: HEADERS,
-        body: dataString
+        body: dataStringRefresh
     };
 
     return options;
@@ -89,10 +89,12 @@ function setRequestRefresh(client_secret, refresh_token) {
 
 // Callback asíncrono para refresh
 async function asyncCallbackRefresh(error, response, body, id) {
+
     if (error) throw error;
-    console.log("Resultado de obtener token: " + response.statusCode); // Línea para debug
+    
+    console.log("Resultado de obtener token desde refresh: " + response.statusCode); // Línea para debug
     const responseJSONRefresh = JSON.parse(body); // Pasamos el JSON a un objeto
-    console.log(responseJSONRefresh.body)
+    
     if (responseJSONRefresh.access_token) {
         // Ya tenemos los access_token, refresh_token y seller_id, los almacenamos en variables
         let access_token = responseJSONRefresh.access_token;
@@ -107,7 +109,9 @@ async function asyncCallbackRefresh(error, response, body, id) {
 
         return responseJSONRefresh;
     } else {
-        throw new Error("Sin access/refresh token del request refresh");
+        return {
+            statusCode: response.statusCode
+        }
     }
 }
 
