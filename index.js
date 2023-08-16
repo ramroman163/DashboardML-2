@@ -1,10 +1,15 @@
 // Imports
 
-// // Importamos todo lo de routing y request
+// Importamos todo lo de routing, express y login
 const express = require("express");
 const path = require("path");
 const request = require("request");
-const session = require("express-session")
+const session = require("express-session");
+const bcryptjs = require("bcryptjs");
+const dotenv = require("dotenv");
+
+// Seteamos el archivo .env
+dotenv.config({ path: './src/env/.env' });
 
 // // Importamos nuestros servicios
 const getTokenService = require("./src/services/getToken.js")
@@ -19,12 +24,15 @@ const dbController = require("./src/controllers/dbConnector.js");
 const PORT = 3000; // Puerto de app
 const app = express();  // Aplicación básica de express
 
-// Sesion 
+// ?
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
 
+// Sesion 
 app.use(session({
     // Mas adelante utilizamos una propiedad token
     secret: "mi_secreto",
-    resave: false,
+    resave: true,
     saveUninitialized: true
 }))
 
@@ -33,7 +41,6 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "src/views"));
 app.use(express.static(path.join(__dirname, "src/views-js")));
 // El uso de path nos permite que esto corra tanto en windows como linux, debe contener un "__dirname"
-
 
 // Iniciamos servidor
 app.listen(PORT, () => {
@@ -44,11 +51,14 @@ app.listen(PORT, () => {
 
 // Peticion a /
 app.get("/", (req, res) => {
+    res.render("login.ejs");
     // Revisamos si tenemos almacenado el nickname en la sesion y renderizamos
-    req.session.nickname ? res.render("index.ejs", { state: req.session.nickname }) : res.render("index.ejs", { state: "No vinculado" });
+    // req.session.nickname ? res.render("index.ejs", { state: req.session.nickname }) : res.render("index.ejs", { state: "No vinculado" });
+
+
 })
 
-// Peticion a /auth
+// Peticion a /auth para vinculacion
 app.get("/auth", async (req, res) => {
     
     const code = req.query.code;
@@ -123,13 +133,26 @@ app.get("/auth", async (req, res) => {
     }
 })
 
+// Peticion a /auth para autorizacion de login
+app.post("/auth", async (req, res) => {
+    // Tomamos user y pass de la peticion post para login
+    const username = req.body.username;
+    const password = req.body.password;
+
+    let passwordHashed = await bcryptjs.hash(password, 10);
+
+    if(username && password){
+        // Si existen, buscamos en la BD
+    }
+})
+
 app.get("/sync", async (req, res) => { 
 
     if(!req.session.user){
         res.json({
             "result": "Tenés que iniciar sesión primero" // Respuesta que se envía al js del index
         })
-        
+
         return;
     }
     
@@ -188,16 +211,7 @@ app.get("/sync", async (req, res) => {
             // Concatenamos los ids obtenidos con los existentes
             publications = publications.concat(responseRequestPublications.publications_id); 
         } catch (error){
-            if (error == 'invalidTokenException') { 
-                console.log("ME DIO TOKEN INVALIDO")
-                const requestOptionsRefresh = getTokenService.setRequestRefresh(getTokenService.getClientSecret(), refresh_token)
-                
-                const responseRefreshToken = getTokenService.doAsyncRequestRefresh(requestOptionsRefresh, getTokenService.asyncCallbackRefresh, req.session.user);
-
-                access_token = responseRefreshToken.access_token;
-                refresh_token =  responseRefreshToken.refresh_token;
-                seller_id =  responseRefreshToken.seller_id;
-            }
+            
         } 
 
     }
