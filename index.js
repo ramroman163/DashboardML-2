@@ -143,6 +143,11 @@ app.post("/auth", async (req, res) => {
 
     if(username && password){
         // Si existen, buscamos en la BD
+        if(results.length == 0 || !(await bcryptjs.compare(passwordHashed, results[0].password))){
+            console.log("Usuario y/o contraseña incorrecta")
+        } else {
+            console.log("Inicio de sesión correcto")
+        }
     }
 })
 
