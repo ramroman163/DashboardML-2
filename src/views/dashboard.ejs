@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+</head>
+<body>
+    <h1>Cuentas de Mercado Libre vinculadas</h1>
+    <h2>Elegir una para vinculacion:</h2>
+    <ul>
+        <% for(let i=0; i<sellers.length; i++){ %>
+            <button style="width: 400px; height: 150px; text-align: center;">
+                <%= sellers[i].seller_id %>
+            </button>
+            <br>
+        <% } %>
+      </ul>
+</body>
+</html>

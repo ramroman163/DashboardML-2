@@ -16,7 +16,7 @@ const getTokenService = require("./src/services/getToken.js")
 const getPublicationsService = require("./src/services/getPublications.js");
 const getPublicationDataService = require("./src/services/getPublicationData.js")
 const getUserDataService = require("./src/services/getUserData.js")
-const sellers = require("./src/services/sellers.js");
+const getSellersService = require("./src/services/sellers.js");
 
 // // Importamos nuestro controlador de BD
 const dbController = require("./src/controllers/dbConnector.js");
@@ -41,6 +41,7 @@ app.use(session({
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "src/views"));
 app.use(express.static(path.join(__dirname, "src/views-js")));
+app.use(express.static(path.join(__dirname, "src/views")));
 // El uso de path nos permite que esto corra tanto en windows como linux, debe contener un "__dirname"
 
 // Iniciamos servidor
@@ -59,7 +60,14 @@ app.get("/", (req, res) => {
 
 // Peticion a /auth para vinculacion
 app.get("/auth", async (req, res) => {
+    // REVISAR (ES TEMPORAL)
+    let perfiles = [];
+    perfiles = await getSellersService.getSellers(req.session.user);
+    console.log("PERFILES")
+    console.log(perfiles[0]);
+    console.log(perfiles[1]);
 
+    res.render("dashboard.ejs", { sellers: perfiles });
 
     if (!req.session.user || req.session.user == 0) {
         res.render("login.ejs");
@@ -85,8 +93,9 @@ app.get("/auth", async (req, res) => {
         //req.session.token = tokenJSON.access_token;
         //req.session.seller_id = tokenJSON.user_id;
         //req.session.refresh_token = tokenJSON.refresh_token;
-
-        req.session.user = 1;
+        console.log("# REQ SESION USER: " + req.session.user)
+        //req.session.user = 1;
+        console.log("# REQ SESION USER: " + req.session.user)
         console.log("# Return del getUserData: ")
         const userData = await getUserDataService.getToken(req.session.user);
         console.log(userData)
@@ -164,6 +173,7 @@ app.post("/auth", async (req, res) => {
             console.log("Inicio de sesión correcto");
             //res.send("GOD");
             req.session.user = results[0].id;//hasta acá ya comprobamos que funciona.
+            console.log("# REQ SESION USER: " + req.session.user)
             res.render("index.ejs", { state: "Sin vincular" })
         }
     } else { //si no hay nombre de usuario o contraseña
@@ -182,9 +192,19 @@ app.get("/sync", async (req, res) => {
         return;
     }
 
-    let perfiles = [];
-    perfiles = await sellers.getSellers(req.session.user);
+    //REVISAR (ES TEMPORAL)
 
+    let perfiles = [];
+    perfiles = await getSellersService.getSellers(req.session.user);
+    console.log("PERFILES")
+    console.log(perfiles[0]);
+    console.log(perfiles[1]);
+
+    res.render("dashboard.ejs", { sellers: "hola" });
+
+    
+    console.log("LLEGO ACA")
+    
     console.log("# Return del getUserData en SYNC: ")
     const userData = await getUserDataService.getToken(req.session.user);
 
@@ -198,7 +218,7 @@ app.get("/sync", async (req, res) => {
     let publications = [] // Array que contendrá los id de publicaciones
 
     let scroll_id = "" // Variable que almacenará el scroll_id una vez obtenido
-
+    
     while (true) {
         try {
             console.log("Entro al while")
@@ -243,7 +263,7 @@ app.get("/sync", async (req, res) => {
         }
 
     }
-
+    
     if (publications.length) { // Si tenemos ids, realizamos las consultas para obtener la informacion y guardarla en la BD
 
         publications.forEach(async (id) => {
