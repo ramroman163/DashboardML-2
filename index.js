@@ -53,26 +53,36 @@ app.listen(PORT, () => {
 
 // Peticion a /
 app.get("/", (req, res) => {
-    req.session.user ? res.render("index.ejs", { state: req.session.nickname }) : res.render("login.ejs");
-    // Revisamos si tenemos almacenado el nickname en la sesion y renderizamos
-    // req.session.nickname ? res.render("index.ejs", { state: req.session.nickname }) : res.render("index.ejs", { state: "No vinculado" });
+    if(!req.session.user || req.session.user === 0){
+        res.render("login.ejs");
+    } else {
+        res.redirect("/home")
+    }
+})
+
+app.get("/home", async (req, res) => {
+    if(!req.session.user || req.session.user === 0){
+        res.redirect("/");
+        return;
+    }
+
+    let profiles = await getSellersService.getSellers(req.session.user);
+    console.log("Perfiles");
+    console.log(profiles);
+
+    res.render("dashboard.ejs", { sellers: profiles });
 })
 
 // Peticion a /auth para vinculacion
 app.get("/auth", async (req, res) => {
     // REVISAR (ES TEMPORAL)
-    let perfiles = [];
-    perfiles = await getSellersService.getSellers(req.session.user);
-    console.log("PERFILES")
-    console.log(perfiles[0]);
-    console.log(perfiles[1]);
-
-    res.render("dashboard.ejs", { sellers: perfiles });
-
-    if (!req.session.user || req.session.user == 0) {
-        res.render("login.ejs");
+    
+    if (!req.session.user || req.session.user === 0) {
+        res.redirect("/");
+        return;
     }
 
+    /*
     const code = req.query.code;
     // Obtenemos el parametro code de la URL luego de que ML realice la autenticacion y nos redirija aquí
 
@@ -93,8 +103,6 @@ app.get("/auth", async (req, res) => {
         //req.session.token = tokenJSON.access_token;
         //req.session.seller_id = tokenJSON.user_id;
         //req.session.refresh_token = tokenJSON.refresh_token;
-        console.log("# REQ SESION USER: " + req.session.user)
-        //req.session.user = 1;
         console.log("# REQ SESION USER: " + req.session.user)
         console.log("# Return del getUserData: ")
         const userData = await getUserDataService.getToken(req.session.user);
@@ -143,11 +151,19 @@ app.get("/auth", async (req, res) => {
         // Renderizamos el index.ejs con state "Error vinculando" en caso de error
         res.render("index.ejs", { state: "Error vinculando" });
         console.log(err);
-    }
+    }*/
 })
 
-// Peticion a /auth para autorizacion de login
-app.post("/auth", async (req, res) => {
+app.get("/seller", async (req, res) => {
+    if (!req.session.user || req.session.user === 0) {
+        res.redirect("/");
+        return;
+    }
+
+    res.render("index.ejs", { state: req.query.seller_id });
+})
+
+app.post("/login", async (req, res) => {
     // Tomamos user y pass de la peticion post para login
 
     const username = req.body.username;
@@ -157,24 +173,21 @@ app.post("/auth", async (req, res) => {
 
     //let passwordHashed = await bcryptjs.hash(password, 12);
 
-
     if (username && password) { //si hay nombre de usuario y contraseña
         const results = await getUserDataService.getUsers(username);//solicitamos todas las contraseñas de la base de datos cuyo nombre de usuario coincida con el enviado por la función para poder comparar.
         console.log("Resultado de consulta info usuario:")
         console.log(results[0].password)
         console.log(results[0].id);
-        console.log("RESULTADO DE COMPARAR bien o mal (");
-        console.log(await bcryptjs.compare(password, results[0].password));
 
         if (results.length == 0 || !(await bcryptjs.compare(password, results[0].password))) { //si no hay nada en base de datos o si los datos de la base de datos no coinci
             console.log("Usuario y/o contraseña incorrecta");
-            res.send("burro");
+            res.send("Usuario y/o contraseña incorrecta");
         } else {
             console.log("Inicio de sesión correcto");
-            //res.send("GOD");
-            req.session.user = results[0].id;//hasta acá ya comprobamos que funciona.
-            console.log("# REQ SESION USER: " + req.session.user)
-            res.render("index.ejs", { state: "Sin vincular" })
+            req.session.user = results[0].id;
+            console.log("# REQ SESION USER: " + req.session.user);
+            res.redirect("/home");
+            return;
         }
     } else { //si no hay nombre de usuario o contraseña
         console.log("error de ingreso de datos.")
@@ -191,19 +204,6 @@ app.get("/sync", async (req, res) => {
 
         return;
     }
-
-    //REVISAR (ES TEMPORAL)
-
-    let perfiles = [];
-    perfiles = await getSellersService.getSellers(req.session.user);
-    console.log("PERFILES")
-    console.log(perfiles[0]);
-    console.log(perfiles[1]);
-
-    res.render("dashboard.ejs", { sellers: "hola" });
-
-    
-    console.log("LLEGO ACA")
     
     console.log("# Return del getUserData en SYNC: ")
     const userData = await getUserDataService.getToken(req.session.user);
@@ -258,10 +258,10 @@ app.get("/sync", async (req, res) => {
 
             // Concatenamos los ids obtenidos con los existentes
             publications = publications.concat(responseRequestPublications.publications_id);
+
         } catch (error) {
-
+            throw new Error("Error inesperado")
         }
-
     }
     
     if (publications.length) { // Si tenemos ids, realizamos las consultas para obtener la informacion y guardarla en la BD
@@ -282,7 +282,6 @@ app.get("/sync", async (req, res) => {
             "result": "No se obtuvo ninguna publicación" // Respuesta que se envía al js del index
         })
     }
-
 })
 
 

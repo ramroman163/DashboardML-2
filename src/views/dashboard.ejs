@@ -6,15 +6,18 @@
     <title>Dashboard</title>
 </head>
 <body>
-    <h1>Cuentas de Mercado Libre vinculadas</h1>
-    <h2>Elegir una para vinculacion:</h2>
+    <h1>Cuentas de Mercado Libre almacenadas</h1>
     <ul>
         <% for(let i=0; i<sellers.length; i++){ %>
-            <button style="width: 400px; height: 150px; text-align: center;">
-                <%= sellers[i].seller_id %>
-            </button>
+            <a class="button__seller" href="" value= <%=sellers[i].seller_id%> >
+                <button style="width: 200px; height: 100px; text-align: center;">
+                    <%= sellers[i].seller_id %>
+                </button>
+            </a>
             <br>
         <% } %>
-      </ul>
+    </ul>
+    
+    <script src="setSeller.js"></script>
 </body>
 </html>
