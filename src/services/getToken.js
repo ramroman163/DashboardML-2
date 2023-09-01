@@ -32,7 +32,7 @@ function setRequest(code, client_secret) {
 }
 
 // Callback asíncrono
-async function asyncCallback(error, response, body) {
+async function asyncCallback(error, response, body, user) {
     if (error) throw error;
     console.log("Resultado de obtener token: " + response.statusCode); // Línea para debug
     const responseJSON = JSON.parse(body); // Pasamos el JSON a un objeto
@@ -42,10 +42,8 @@ async function asyncCallback(error, response, body) {
         let access_token = responseJSON.access_token;
         let refresh_token = responseJSON.refresh_token;
         let user_id = responseJSON.user_id;
-        let user = 1;
         
         console.log("Almacenamos token"); // Línea para debug
-
         
         await dbConnector.saveUserData(access_token, refresh_token, user_id, user); // Guardamos los datos del usuario en la db
         
@@ -56,10 +54,10 @@ async function asyncCallback(error, response, body) {
 }
 
 // Funcion para llamar al request
-function doAsyncRequest(requestOptions, asyncRequestCallback) {     
+function doAsyncRequest(requestOptions, asyncRequestCallback, user) {     
     return new Promise((resolve, reject) => {                          
         request(requestOptions, (error, response, body) => {       
-            asyncRequestCallback(error, response, body)             
+            asyncRequestCallback(error, response, body, user)             
                 .then((value) => resolve(value))                 
                 .catch((error) => reject(error))                    
         });                                                         

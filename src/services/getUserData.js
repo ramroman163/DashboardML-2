@@ -3,9 +3,9 @@ const dbConnectorService = require("../controllers/dbConnector.js");
 
 // Hacer query: dbConnectorService.connectorDbDashboard.query(sql_query, (error, result, filed) => {})
 
-function getToken(user) {
+function getToken(seller_id) {
     return new Promise((resolv, reject) => {
-        let updateQuery = `SELECT token, refresh_token, seller_id FROM ml_sellers WHERE usuario = ${user}`;
+        let updateQuery = `SELECT token, refresh_token, seller_id FROM ml_sellers WHERE seller_id = "${seller_id}"`;
         dbConnectorService.connectDbDashboard.query(updateQuery, (err, result, filed) => {
             if (err) {
                 console.log(err);

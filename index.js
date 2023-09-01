@@ -75,14 +75,14 @@ app.get("/home", async (req, res) => {
 
 // Peticion a /auth para vinculacion
 app.get("/auth", async (req, res) => {
-    // REVISAR (ES TEMPORAL)
     
     if (!req.session.user || req.session.user === 0) {
         res.redirect("/");
         return;
     }
+    
+    // REVISAR ACAA (ES TEMPORAL) ----------
 
-    /*
     const code = req.query.code;
     // Obtenemos el parametro code de la URL luego de que ML realice la autenticacion y nos redirija aquí
 
@@ -94,7 +94,7 @@ app.get("/auth", async (req, res) => {
 
     try {   // Ejecutamos el request usando await y asincronia,
         // para poder estructurar el código bien sin frenar los procesos
-        await getTokenService.doAsyncRequest(requestOptions, getTokenService.asyncCallback);
+        await getTokenService.doAsyncRequest(requestOptions, getTokenService.asyncCallback, req.session.user);
 
         // console.log("# Respuesta del getTokenService: ") Línea para debug
         // console.log(tokenJSON); Línea para debug
@@ -103,11 +103,11 @@ app.get("/auth", async (req, res) => {
         //req.session.token = tokenJSON.access_token;
         //req.session.seller_id = tokenJSON.user_id;
         //req.session.refresh_token = tokenJSON.refresh_token;
-        console.log("# REQ SESION USER: " + req.session.user)
+        console.log("# Req session user: " + req.session.user)
         console.log("# Return del getUserData: ")
-        const userData = await getUserDataService.getToken(req.session.user);
+        const userData = await getUserDataService.getToken(req.session.seller_id);
         console.log(userData)
-
+/*
         const access_token = userData[0].token;
         const refresh_token = userData[0].refresh_token;
         const seller_id = userData[0].seller_id;
@@ -146,12 +146,12 @@ app.get("/auth", async (req, res) => {
                 res.render("index.ejs", { state: "Acceso invalido" }); // Renderizamos el index.ejs con state Acceso inválido
             }
         });
-
+*/
     } catch (err) {
         // Renderizamos el index.ejs con state "Error vinculando" en caso de error
         res.render("index.ejs", { state: "Error vinculando" });
         console.log(err);
-    }*/
+    }
 })
 
 app.get("/seller", async (req, res) => {
@@ -159,6 +159,9 @@ app.get("/seller", async (req, res) => {
         res.redirect("/");
         return;
     }
+
+    req.session.seller_id = req.query.seller_id;
+    console.log("# Session seller: " + req.session.seller_id);
 
     res.render("index.ejs", { state: req.query.seller_id });
 })
@@ -206,7 +209,7 @@ app.get("/sync", async (req, res) => {
     }
     
     console.log("# Return del getUserData en SYNC: ")
-    const userData = await getUserDataService.getToken(req.session.user);
+    const userData = await getUserDataService.getToken(req.session.seller_id);
 
     let access_token = userData[0].token;
     console.log(`AT: ${userData[0].token}`)
@@ -214,7 +217,7 @@ app.get("/sync", async (req, res) => {
     console.log(`RT: ${userData[0].refresh_token}`)
     let seller_id = userData[0].seller_id;
     console.log(`UD: ${userData[0].seller_id}`)
-
+/*
     let publications = [] // Array que contendrá los id de publicaciones
 
     let scroll_id = "" // Variable que almacenará el scroll_id una vez obtenido
@@ -281,7 +284,7 @@ app.get("/sync", async (req, res) => {
         res.json({
             "result": "No se obtuvo ninguna publicación" // Respuesta que se envía al js del index
         })
-    }
+    }*/
 })
 
 
