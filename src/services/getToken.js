@@ -45,9 +45,12 @@ async function asyncCallback(error, response, body, user) {
         
         console.log("Almacenamos token"); // Línea para debug
         
-        await dbConnector.saveUserData(access_token, refresh_token, user_id, user); // Guardamos los datos del usuario en la db
+            
+        const resultLink = await dbConnector.saveUserData(access_token, refresh_token, user_id, user); // Guardamos los datos del usuario en la db
         
-        return responseJSON;
+        return resultLink;
+
+        console.log(" ###macs### estoy seguro de que acá no llega")
     } else {
         throw new Error("Sin access token");
     }

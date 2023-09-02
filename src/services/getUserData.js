@@ -11,7 +11,7 @@ function getToken(seller_id) {
                 console.log(err);
                 reject(err);
             } else {
-                console.log("# Resultado de UPDATE: ")
+                console.log("# 3 Resultado de funcion getToken: ")
                 resolv(result);
             }
         })
@@ -26,7 +26,7 @@ function getUsers(user) {
                 console.log(err);
                 reject(err);
             } else {
-                console.log("# Resultado de UPDATE: ")
+                console.log("# 4 Resultado de UPDATE de funcion getUsers: ")
                 resolv(result);
             }
         })

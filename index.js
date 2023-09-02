@@ -70,7 +70,12 @@ app.get("/home", async (req, res) => {
     console.log("Perfiles");
     console.log(profiles);
 
-    res.render("dashboard.ejs", { sellers: profiles });
+    req.session.sellers = profiles
+
+    res.render("dashboard.ejs", { 
+        sellers: profiles,
+        message: "" 
+    });
 })
 
 // Peticion a /auth para vinculacion
@@ -94,19 +99,26 @@ app.get("/auth", async (req, res) => {
 
     try {   // Ejecutamos el request usando await y asincronia,
         // para poder estructurar el código bien sin frenar los procesos
-        await getTokenService.doAsyncRequest(requestOptions, getTokenService.asyncCallback, req.session.user);
+        resultLink = await getTokenService.doAsyncRequest(requestOptions, getTokenService.asyncCallback, req.session.user);
+        console.log("# Resultado resultLink: ")
+        console.log(resultLink)
+        if(resultLink.existentUser){
+            //tira error
+            res.render("dashboard.ejs", {  
+                sellers: req.session.sellers,
+                message: "Usuario vinculado en otra cuenta!"});
+            return;
+        }
 
-        // console.log("# Respuesta del getTokenService: ") Línea para debug
-        // console.log(tokenJSON); Línea para debug
+        if(resultLink.seller_id){
+            res.redirect(`/seller?seller_id=${resultLink.seller_id}`)
+            return;
+        }
+/*
+        console.log("# Req session user: " + req.session.user); console.log("# Return del getUserData: ");
 
-        // Eliminamos variables locales y reemplazamos por variables de session
-        //req.session.token = tokenJSON.access_token;
-        //req.session.seller_id = tokenJSON.user_id;
-        //req.session.refresh_token = tokenJSON.refresh_token;
-        console.log("# Req session user: " + req.session.user)
-        console.log("# Return del getUserData: ")
         const userData = await getUserDataService.getToken(req.session.seller_id);
-        console.log(userData)
+        console.log(userData)*/
 /*
         const access_token = userData[0].token;
         const refresh_token = userData[0].refresh_token;
@@ -209,7 +221,7 @@ app.get("/sync", async (req, res) => {
     }
     
     console.log("# Return del getUserData en SYNC: ")
-    const userData = await getUserDataService.getToken(req.session.seller_id);
+    const userData = await getUserDataService.getToken(req.session.seller_id, req.session.user);
 
     let access_token = userData[0].token;
     console.log(`AT: ${userData[0].token}`)
@@ -217,12 +229,17 @@ app.get("/sync", async (req, res) => {
     console.log(`RT: ${userData[0].refresh_token}`)
     let seller_id = userData[0].seller_id;
     console.log(`UD: ${userData[0].seller_id}`)
-/*
+
     let publications = [] // Array que contendrá los id de publicaciones
 
     let scroll_id = "" // Variable que almacenará el scroll_id una vez obtenido
-    
-    while (true) {
+    let i = 10
+    let k = 0;
+    let lastIterationScrollId;
+    while /*(i>1)*/(true) {
+        if(k >= 5){
+            break;
+        }
         try {
             console.log("Entro al while")
             // Seteamos las opciones de la consulta de publicaciones con el token e id del usuario
@@ -232,9 +249,11 @@ app.get("/sync", async (req, res) => {
             // Realizamos la consulta y obtener un objeto con el scroll_id y los id de publicaciones obtenidas
             responseRequestPublications = await getPublicationsService.doAsyncRequest(requestOptionsPublications, getPublicationsService.asyncCallback)
 
-            if (responseRequestPublications.statusCode == 403 || responseRequestPublications.statusCode == 400) {
+            if (responseRequestPublications.statusCode == 403 || responseRequestPublications.statusCode == 400 /*|| i==0*/) {
                 console.log(`# Se obtuvo un status code de ${responseRequestPublications.statusCode} en publications`);
-
+                if(responseRequestPublications.statusCode == 400){
+                    k++;
+                }
                 const requestOptionsRefresh = getTokenService.setRequestRefresh(getTokenService.getClientSecret(), refresh_token)
 
                 try {
@@ -254,9 +273,10 @@ app.get("/sync", async (req, res) => {
                     continue;
                 }
             }
-
             scroll_id = responseRequestPublications.scroll_id; // Seteamos el scroll_id
-
+            //if(scroll_id != lastIterationScrollId){ i=10 }
+            //lastIterationScrollId = scroll_id;
+            
             if (scroll_id == null || scroll_id == undefined) break; // Cuando no hay más paginación salimos del bucle
 
             // Concatenamos los ids obtenidos con los existentes
@@ -265,6 +285,7 @@ app.get("/sync", async (req, res) => {
         } catch (error) {
             throw new Error("Error inesperado")
         }
+        //i--;
     }
     
     if (publications.length) { // Si tenemos ids, realizamos las consultas para obtener la informacion y guardarla en la BD
@@ -276,15 +297,22 @@ app.get("/sync", async (req, res) => {
             console.log(statusCode);
         })
 
+        let publicationsQuantity = `La cantidad de publicaciones obtenidas es: ${publications.length}`
+
         res.json({
-            "result": "Publicaciones obtenidas" // Respuesta que se envía al js del index
+            "result": publicationsQuantity // Respuesta que se envía al js del index
+        })
+    }
+    else if (!publications.length && k >= 5) {
+        res.json({
+            "result": "Petición invalida al obtener publicaciones" // Respuesta que se envía al js del index
         })
     }
     else {
         res.json({
             "result": "No se obtuvo ninguna publicación" // Respuesta que se envía al js del index
         })
-    }*/
+    }
 })
 
 

@@ -22,25 +22,37 @@ const connectDb = () => {
 
 // Almacenar información de usuario
 function saveUserData(access_token, refresh_token, user_id, user) { 
-    return new Promise((resolv, reject) => {
-        connectorDbDashboard.query(`SELECT * FROM ml_sellers WHERE seller_id = "${user_id}"`, (err, result, filed) => {
-            //console.log(existingItem)
+    return new Promise(async (resolv, reject) => {
+        connectorDbDashboard.query(`SELECT * FROM ml_sellers WHERE seller_id = "${user_id}"`, async (err, result, filed) => {
             if (err){
                 console.log(err);
                 reject(err);
             } else {
                 if(result.length > 0){
-                    console.log(`Ya existe el seller "${user_id}"`)
-                    let updateQuery = `UPDATE ml_sellers SET token = "${access_token}", refresh_token = "${refresh_token}" WHERE seller_id = "${user_id}" AND usuario = ${user}`;
-                    connectorDbDashboard.query(updateQuery, (err, result, filed) => {
-                        if (err){
-                            console.log(err);
-                            reject(err);
-                        } else {
-                            console.log("# Resultado de UPDATE: ")
-                            resolv (result);
+                    let existentSeller = await checkForMultiUsers(user_id, user);
+                    
+                    if(existentSeller.length > 0){
+                        console.log(`El seller ${user_id} ya existe en otro usuario!`);
+                        resolv({
+                            existentUser: true
+                        })
+                    } else {
+                        console.log(`Ya existe el seller "${user_id}"`)
+                        let updateQuery = `UPDATE ml_sellers SET token = "${access_token}", refresh_token = "${refresh_token}" WHERE seller_id = "${user_id}" AND usuario = ${user}`;
+                        connectorDbDashboard.query(updateQuery, (err, result, filed) => {
+                            if (err){
+                                console.log(err);
+                                reject(err);
+                                return;
+                            } else {
+                                console.log("# 1 Resultado de UPDATE de saveUserData: ")
+                                resolv ({
+                                    seller_id: user_id
+                                });
+                            }
                         }
-                    })
+                        )
+                    }                    
                 } else {
                     console.log(`Todavía no existe el seller "${user_id}"`)
                     let insertQuery = `INSERT INTO ml_sellers (seller_id, usuario, token, refresh_token) VALUES ("${user_id}", ${user}, "${access_token}", "${refresh_token}")`;
@@ -50,17 +62,34 @@ function saveUserData(access_token, refresh_token, user_id, user) {
                             reject(err);
                         } else {
                             console.log("# Resultado de INSERT: ")
-                            resolv (result);
+                            resolv ({
+                                seller_id: user_id
+                            });
                         }
                     })
                 }
-                resolv (result);
             }
         });
     });
 }
 
+function checkForMultiUsers(user_id, user){
+    return new Promise((resolv, reject) => {
+        let checkForMultiUsersQuery = `SELECT usuario, seller_id FROM ml_sellers WHERE seller_id = "${user_id}" AND NOT usuario = ${user}`
+        connectorDbDashboard.query(checkForMultiUsersQuery, (err, result, filed) => {
+            if (err){
+                console.log(err);
+                reject(err);
+            }
+        
+            console.log(result);
+            resolv(result)
+        })
+    })
+}
+
 function updateUserData(access_token, refresh_token, seller_id, user_id){
+    
     return new Promise((resolv, reject) => {
         const sql_query = `UPDATE ml_sellers SET token = "${access_token}", refresh_token = "${refresh_token}" WHERE seller_id = "${seller_id}" AND usuario = ${user_id}`;
         //incheckeable
@@ -93,7 +122,7 @@ function savePublication(user, seller_id, item_id, title, status, sub_status, pr
                                 console.log(err);
                                 reject(err);
                             } else {
-                                console.log("# Resultado de UPDATE: ")
+                                console.log("# 2 Resultado de UPDATE de savePublications: ")
                                 resolv (result);
                             }
                         })
