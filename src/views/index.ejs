@@ -7,12 +7,17 @@
 </head>
 <body>
     <a style="text-decoration: none; color: black" href="http://localhost:3000">
-        <h1>Dashboard</h1>
+        <h1>⬅Dashboard</h1>
     </a>
     <!-- state es un valor que vamos pasando cuando renderizamos -->
     <p>Cuenta seleccionada: <span class="link_state"> <%=state%> </span></p>
     <button class="button__sync" type="button">Sincronizar publicaciones</button>
     <p class="status__sync"></p>
+    
+    <a href="/logout">
+        <button type="button">Cerrar sesión</button>
+    </a>
+
     <script src="sync.js"></script> 
 </body>
 </html>

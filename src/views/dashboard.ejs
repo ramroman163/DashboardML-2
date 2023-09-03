@@ -11,7 +11,7 @@
         <% for(let i=0; i<sellers.length; i++){ %>
             <a class="button__seller" href="" value= <%=sellers[i].seller_id%> >
                 <button style="width: 200px; height: 100px; text-align: center;">
-                    <%= sellers[i].seller_id %>
+                    <%= sellers[i].nickname %>
                 </button>
             </a>
             <br>
@@ -20,6 +20,10 @@
     <h3><%= message %></h3>
     <a style="text-decoration: none;" class="redirect__auth" href="#">
         <button class="button__link" type="button">Vincular cuenta</button>
+    </a>
+
+    <a href="/logout">
+        <button type="button">Cerrar sesión</button>
     </a>
 
     <script src="setAuth.js"></script>
