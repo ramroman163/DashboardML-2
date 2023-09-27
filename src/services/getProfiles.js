@@ -19,14 +19,17 @@ async function asyncCallbackProfile(error, response, body){
     if(error) throw error;
     
     const responseJSON = JSON.parse(body);
-
+    console.log(`Respuesta profile: ${response.statusCode}`)
     if(responseJSON.nickname){
         return {
             nickname: responseJSON.nickname,
             statusCode: response.statusCode
         };
     } else {
-        throw new Error("No se obtuvo el nickname del perfil")
+        return {
+            statusCode: response.statusCode
+        }
+        //throw new Error("No se obtuvo el nickname del perfil")
     }
 }
 

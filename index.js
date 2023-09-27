@@ -76,7 +76,7 @@ app.get("/home", async (req, res) => {
     await Promise.all(profiles.map(async (profile) => {
         requestCounter = 0;
         while(true){
-            if(requestCounter >= 3){
+            if(requestCounter >= 10){
                 break;
             }
             try {
@@ -100,6 +100,7 @@ app.get("/home", async (req, res) => {
                     try {
                         const responseRefreshToken = await getTokenService.doAsyncRequestRefresh(requestOptionsRefresh, getTokenService.asyncCallbackRefresh, req.session.user);
                         if (responseRefreshToken.access_token) {
+                            console.log("ENTRO ACA? 27/9")
                             access_token = responseRefreshToken.access_token;
                             refresh_token = responseRefreshToken.refresh_token;
                             seller_id = responseRefreshToken.user_id;
@@ -122,14 +123,8 @@ app.get("/home", async (req, res) => {
                         nickname: nicknameProfile,
                         seller_id: sellerProfile
                     }
-/*
-                    console.log("NEW PROFILE: ");
-                    console.log(newProfile);*/
 
                     dataUsers = dataUsers.concat(newProfile);
-/*
-                    console.log("1 Perfiles HASTA ACA: ");
-                    console.log(dataUsers);*/
 
                     break;
                 }
