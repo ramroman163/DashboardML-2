@@ -1,17 +1,16 @@
-const mysql = require("mysql");
 const dbConnectorService = require("../controllers/dbConnector.js");
 
-// Hacer query: dbConnectorService.connectorDbDashboard.query(sql_query, (error, result, filed) => {})
+// Hacer query: dbConnectorService.connectDbDashboard.query(sql_query, (error, result, filed) => {})
 
 function getToken(seller_id) {
     return new Promise((resolv, reject) => {
-        let updateQuery = `SELECT token, refresh_token, seller_id FROM ml_sellers WHERE seller_id = "${seller_id}"`;
+        const updateQuery = `SELECT token, refresh_token, seller_id FROM ml_sellers WHERE seller_id = "${seller_id}"`;
         dbConnectorService.connectDbDashboard.query(updateQuery, (err, result, filed) => {
             if (err) {
                 console.log(err);
                 reject(err);
             } else {
-                console.log("# 3 Resultado de funcion getToken: ")
+                console.log("Resultado de funcion getToken: ")
                 resolv(result);
             }
         })
@@ -20,13 +19,13 @@ function getToken(seller_id) {
 
 function getUsers(user) {
     return new Promise((resolv, reject) => {
-        let updateQuery = `SELECT username, password, id FROM usuarios WHERE username = "${user}"`;
+        const updateQuery = `SELECT username, password, id FROM usuarios WHERE username = "${user}"`;
         dbConnectorService.connectDbDashboard.query(updateQuery, (err, result, filed) => {
             if (err) {
                 console.log(err);
                 reject(err);
             } else {
-                console.log("# 4 Resultado de UPDATE de funcion getUsers: ")
+                console.log("Resultado de UPDATE de funcion getUsers: ")
                 resolv(result);
             }
         })
@@ -34,6 +33,6 @@ function getUsers(user) {
 }
 
 module.exports = {
-    getToken: getToken,
-    getUsers: getUsers
+    getToken,
+    getUsers
 }

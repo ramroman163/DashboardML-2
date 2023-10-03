@@ -1,6 +1,6 @@
 // Imports
-let request = require('request');
-let dbConnector = require("../controllers/dbConnector.js")
+const request = require('request');
+const dbConnector = require("../controllers/dbConnector.js")
 
 // Funcion para setear las options de la request
 function setRequestDataPublications(access_token, publication_id){
@@ -65,7 +65,7 @@ function doAsyncRequest(requestOptions, asyncRequestCallback, user) {
 }
 
 module.exports = {
-    setRequestDataPublications: setRequestDataPublications,
-    asyncCallback: asyncCallback,
-    doAsyncRequest: doAsyncRequest
+    setRequestDataPublications,
+    asyncCallback,
+    doAsyncRequest
 }

@@ -12,7 +12,7 @@ function getSellers(user_id) {
                 console.log(err);
                 reject(err);
             } else {
-                console.log("###Macs### => Resultado de perfiles por usuario: ")
+                console.log("Resultado de perfiles por usuario: ")
                 resolv(result);
             }
         })
@@ -21,5 +21,5 @@ function getSellers(user_id) {
 
 
 module.exports = {
-    getSellers: getSellers
+    getSellers
 }

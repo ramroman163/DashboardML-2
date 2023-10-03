@@ -15,7 +15,10 @@ const connectorDbDashboard = mysql.createConnection(
 // Establecer conexión con la BD
 const connectDb = () => {
     connectorDbDashboard.connect(err => {
-        if(err) throw err;
+        if(err){
+            console.log("Error al conectar a la base de datos");
+            process.exit(1);
+        };
         console.log("Conectado");
     })
 }
@@ -73,6 +76,7 @@ function saveUserData(access_token, refresh_token, user_id, user) {
     });
 }
 
+// Buscar usuario existente
 function checkForMultiUsers(user_id, user){
     return new Promise((resolv, reject) => {
         let checkForMultiUsersQuery = `SELECT usuario, seller_id FROM ml_sellers WHERE seller_id = "${user_id}" AND NOT usuario = ${user}`
@@ -88,6 +92,7 @@ function checkForMultiUsers(user_id, user){
     })
 }
 
+// Actualizar información de usuario
 function updateUserData(access_token, refresh_token, seller_id, user_id){
     
     return new Promise((resolv, reject) => {
@@ -160,16 +165,13 @@ function savePublication(user, seller_id, item_id, title, status, sub_status, pr
     });
 
     //item_id es mi dato a consultar, necesito que si el item_id existe, actualice
-    
-
-
 }
 
 // Exportaciones
 module.exports = {
     connectDbDashboard: connectorDbDashboard,
-    connectDb: connectDb,
-    saveUserData: saveUserData,
-    savePublication: savePublication,
-    updateUserData: updateUserData
+    connectDb,
+    saveUserData,
+    savePublication,
+    updateUserData
 }

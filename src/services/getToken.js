@@ -1,9 +1,9 @@
 // Imports
-let request = require('request');
-let dbConnector = require("../controllers/dbConnector.js");
+const request = require('request');
+const dbConnector = require("../controllers/dbConnector.js");
 
 // Variables
-let client_secret = "sKAwWnBSHRH4Plg2UmAvPnPYHg9NL9fZ";
+const client_secret = "sKAwWnBSHRH4Plg2UmAvPnPYHg9NL9fZ";
 
 // Getter de la variable client_secret
 function getClientSecret(){
@@ -12,16 +12,16 @@ function getClientSecret(){
 
 // Funcion para setear las options de la request
 function setRequest(code, client_secret) {
-    const APP_ID = "4080755184952911";
+    const APP_ID = process.env.APP_ID;
     const REDIRECT = "http://localhost:3000/auth";
     const HEADERS = {
         'accept': 'application/json',
         'content-type': 'application/x-www-form-urlencoded'
     };
 
-    let dataString = `grant_type=authorization_code&client_id=${APP_ID}&client_secret=${client_secret}&code=${code}&redirect_uri=${REDIRECT}`;
+    const dataString = `grant_type=authorization_code&client_id=${APP_ID}&client_secret=${client_secret}&code=${code}&redirect_uri=${REDIRECT}`;
 
-    let options = {
+    const options = {
         url: 'https://api.mercadolibre.com/oauth/token',
         method: 'POST',
         headers: HEADERS,
@@ -39,18 +39,13 @@ async function asyncCallback(error, response, body, user) {
 
     if (responseJSON.access_token) {
         // Ya tenemos los access_token, refresh_token y user_id, los almacenamos en variables
-        let access_token = responseJSON.access_token;
-        let refresh_token = responseJSON.refresh_token;
-        let user_id = responseJSON.user_id;
+        const { access_token: access_token, refresh_token: refresh_token, user_id: user_id } = responseJSONRefresh;
         
         console.log("Almacenamos token"); // Línea para debug
         
-            
         const resultLink = await dbConnector.saveUserData(access_token, refresh_token, user_id, user); // Guardamos los datos del usuario en la db
         
         return resultLink;
-
-        console.log(" ###macs### estoy seguro de que acá no llega")
     } else {
         throw new Error("Sin access token");
     }
@@ -76,9 +71,9 @@ function setRequestRefresh(client_secret, refresh_token) {
         'content-type': 'application/x-www-form-urlencoded'
     };
 
-    let dataStringRefresh = `grant_type=refresh_token&client_id=${APP_ID}&client_secret=${client_secret}&refresh_token=${refresh_token}`;
+    const dataStringRefresh = `grant_type=refresh_token&client_id=${APP_ID}&client_secret=${client_secret}&refresh_token=${refresh_token}`;
     
-    let options = {
+    const options = {
         url: 'https://api.mercadolibre.com/oauth/token',
         method: 'POST',
         headers: HEADERS,
@@ -98,9 +93,8 @@ async function asyncCallbackRefresh(error, response, body, id) {
     
     if (responseJSONRefresh.access_token) {
         // Ya tenemos los access_token, refresh_token y seller_id, los almacenamos en variables
-        let access_token = responseJSONRefresh.access_token;
-        let refresh_token = responseJSONRefresh.refresh_token;
-        let seller_id = responseJSONRefresh.user_id;
+        //let seller_id = responseJSONRefresh.user_id;
+        const { access_token: access_token, refresh_token: refresh_token, user_id: seller_id } = responseJSONRefresh;
         
         console.log("Almacenamos token"); // Línea para debug
 
@@ -128,11 +122,12 @@ function doAsyncRequestRefresh(requestOptions, asyncRequestCallback, id) {
 }  
 
 // Export de las funciones del archivo getToken.js
-module.exports.getClientSecret = getClientSecret;
-module.exports.setRequest = setRequest;
-module.exports.doAsyncRequest = doAsyncRequest;
-module.exports.asyncCallback = asyncCallback;
-
-module.exports.setRequestRefresh = setRequestRefresh;
-module.exports.doAsyncRequestRefresh = doAsyncRequestRefresh;
-module.exports.asyncCallbackRefresh = asyncCallbackRefresh;
+module.exports = {
+    getClientSecret,
+    setRequest,
+    doAsyncRequest,
+    asyncCallback,
+    setRequestRefresh,
+    doAsyncRequestRefresh,
+    asyncCallbackRefresh
+}

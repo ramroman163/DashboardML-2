@@ -1,13 +1,13 @@
-let request = require('request');
+const request = require('request');
 
 function setRequestProfile(access_token, seller_id){
     const URL = `https://api.mercadolibre.com/users/${seller_id}`;
     
-    let headers = {                                     
+    const headers = {                                     
         'Authorization': `Bearer ${access_token}`           
     };  
 
-    let options = {                                         
+    const options = {                                         
         url: URL,                                           
         headers: headers                                    
     };
@@ -44,7 +44,7 @@ function doAsyncRequestProfile(requestProfilesOptions, asyncCallbackProfile){
 }
 
 module.exports = {
-    setRequestProfile: setRequestProfile,
-    asyncCallbackProfile: asyncCallbackProfile,
-    doAsyncRequestProfile: doAsyncRequestProfile
+    setRequestProfile,
+    asyncCallbackProfile,
+    doAsyncRequestProfile
 }

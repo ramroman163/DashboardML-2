@@ -1,9 +1,8 @@
 // Imports
 
-// Importamos todo lo de routing, express y login
+// Importamos librerias requeridas
 const express = require("express");
-const path = require("path");
-const request = require("request");
+const path = require("node:path");
 const session = require("express-session");
 const bcryptjs = require("bcryptjs");
 const dotenv = require("dotenv");
@@ -12,12 +11,12 @@ const dotenv = require("dotenv");
 dotenv.config({ path: './src/env/.env' });
 
 // // Importamos nuestros servicios
-const getTokenService = require("./src/services/getToken.js")
+const getTokenService = require("./src/services/getToken.js");
 const getPublicationsService = require("./src/services/getPublications.js");
-const getPublicationDataService = require("./src/services/getPublicationData.js")
-const getUserDataService = require("./src/services/getUserData.js")
-const getSellersService = require("./src/services/sellers.js");
-const getProfileService = require("./src/services/getProfiles.js")
+const getPublicationDataService = require("./src/services/getPublicationData.js");
+const getUserDataService = require("./src/services/getUserData.js");
+const getSellersUserService = require("./src/services/getSellersUser.js");
+const getProfileService = require("./src/services/getProfiles.js");
 
 // // Importamos nuestro controlador de BD
 const dbController = require("./src/controllers/dbConnector.js");
@@ -26,7 +25,7 @@ const dbController = require("./src/controllers/dbConnector.js");
 const PORT = 3000; // Puerto de app
 const app = express();  // Aplicación básica de express
 
-// ?
+// Especificamos el manejo de JSON
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
@@ -48,12 +47,18 @@ app.use(express.static(path.join(__dirname, "src/views")));
 // Iniciamos servidor
 app.listen(PORT, () => {
     //Iniciamos conexion con la BD
-    dbController.connectDb();
-    console.log(`Servidor escuchando en http://localhost:${PORT}`);
+    try {
+        dbController.connectDb();
+        console.log(`Servidor escuchando en http://localhost:${PORT}`);
+    } catch (err) {
+        console.log("Error al iniciar app");
+        process.exit(1);
+    }
 })
 
 // Peticion a /
 app.get("/", (req, res) => {
+
     if(!req.session.user || req.session.user === 0){
         res.render("login.ejs");
     } else {
@@ -62,12 +67,13 @@ app.get("/", (req, res) => {
 })
 
 app.get("/home", async (req, res) => {
+
     if(!req.session.user || req.session.user === 0){
         res.redirect("/");
         return;
     }
 
-    let profiles = await getSellersService.getSellers(req.session.user);
+    let profiles = await getSellersUserService.getSellers(req.session.user);
     
     let dataUsers = [];
 
@@ -93,14 +99,13 @@ app.get("/home", async (req, res) => {
                 
                 if (nicknameResponse.statusCode == 403 || nicknameResponse.statusCode == 400 || nicknameResponse.statusCode == 401) {
                     requestCounter++;
-                    console.log(`# Se obtuvo un status code de ${nicknameResponse.statusCode} en getProfile`);
+                    console.log(`Se obtuvo un status code de ${nicknameResponse.statusCode} en getProfile`);
                     
                     const requestOptionsRefresh = getTokenService.setRequestRefresh(getTokenService.getClientSecret(), refresh_token)
     
                     try {
                         const responseRefreshToken = await getTokenService.doAsyncRequestRefresh(requestOptionsRefresh, getTokenService.asyncCallbackRefresh, req.session.user);
                         if (responseRefreshToken.access_token) {
-                            console.log("ENTRO ACA? 27/9")
                             access_token = responseRefreshToken.access_token;
                             refresh_token = responseRefreshToken.refresh_token;
                             seller_id = responseRefreshToken.user_id;
@@ -153,8 +158,6 @@ app.get("/auth", async (req, res) => {
         res.redirect("/");
         return;
     }
-    
-    // REVISAR ACAA (ES TEMPORAL) ----------
 
     const code = req.query.code;
     // Obtenemos el parametro code de la URL luego de que ML realice la autenticacion y nos redirija aquí
@@ -165,8 +168,8 @@ app.get("/auth", async (req, res) => {
     const requestOptions = getTokenService.setRequest(code, client_secret);
     // Armamos las options de la request de datos del usuario
 
-    try {   // Ejecutamos el request usando await y asincronia,
-        // para poder estructurar el código bien sin frenar los procesos
+    try {   // Ejecutamos el request para obtener la data del seller,
+            // para poder estructurar el código bien sin frenar los procesos
         resultLink = await getTokenService.doAsyncRequest(requestOptions, getTokenService.asyncCallback, req.session.user);
         console.log("# Resultado resultLink: ")
         console.log(resultLink)
@@ -176,14 +179,14 @@ app.get("/auth", async (req, res) => {
                 message: "Usuario vinculado en otra cuenta!"});
             return;
         }
-
+/*
         const arraySellers = req.session.sellers;
         let sellerNickname = "";
         arraySellers.forEach((seller) => {
             if(seller.seller_id == resultLink.seller_id){
                 sellerNickname = seller.nickname
             }
-        })
+        })*/ // Revisar esto, no hace nada
 
         if(resultLink.seller_id){
             //res.redirect(`/seller?seller_id=${resultLink.seller_id}&nickname=${sellerNickname}`)
@@ -202,7 +205,7 @@ app.get("/auth", async (req, res) => {
     }
 })
 
-app.get("/seller", async (req, res) => {
+app.get("/seller", (req, res) => {
     if (!req.session.user || req.session.user === 0) {
         res.redirect("/");
         return;
@@ -218,32 +221,28 @@ app.get("/seller", async (req, res) => {
 
 app.post("/login", async (req, res) => {
     // Tomamos user y pass de la peticion post para login
-
     const username = req.body.username;
     const password = req.body.password;
 
-    console.log("Data del login: " + username + " " + password);
+    console.log("Username: ", username);
+    console.log("Password: ", password);
 
-    //let passwordHashed = await bcryptjs.hash(password, 12);
+    if (username && password) {
+        const results = await getUserDataService.getUsers(username); // Solicitamos todas las contraseñas de la base de datos cuyo nombre de usuario coincida con el enviado por la función para poder comparar.
+        console.log("Resultado de consulta sobre info de usuario: ", results[0].password, results[0].id);
 
-    if (username && password) { //si hay nombre de usuario y contraseña
-        const results = await getUserDataService.getUsers(username);//solicitamos todas las contraseñas de la base de datos cuyo nombre de usuario coincida con el enviado por la función para poder comparar.
-        console.log("Resultado de consulta info usuario:")
-        console.log(results[0].password)
-        console.log(results[0].id);
-
-        if (results.length == 0 || !(await bcryptjs.compare(password, results[0].password))) { //si no hay nada en base de datos o si los datos de la base de datos no coinci
+        if (results.length == 0 || !(await bcryptjs.compare(password, results[0].password))) { //si no hay nada en base de datos o si los datos de la base de datos no coinciden
             console.log("Usuario y/o contraseña incorrecta");
             res.send("Usuario y/o contraseña incorrecta");
         } else {
             console.log("Inicio de sesión correcto");
             req.session.user = results[0].id;
-            console.log("# REQ SESION USER: " + req.session.user);
+            console.log("Nuevo usuario en la sesión: " + req.session.user);
             res.redirect("/home");
             return;
         }
     } else { //si no hay nombre de usuario o contraseña
-        console.log("error de ingreso de datos.")
+        console.log("Error de ingreso de datos en login.")
         res.send('Por favor, ingrese un nombre de usuario y contraseña válidos.')
     }
 })
@@ -254,23 +253,39 @@ app.get("/sync", async (req, res) => {
         res.json({
             "result": "Tenés que iniciar sesión primero" // Respuesta que se envía al js del index
         })
-
         return;
     }
     
-    console.log("# Return del getUserData en SYNC: ")
     const userData = await getUserDataService.getToken(req.session.seller_id, req.session.user);
-
+    
     let access_token = userData[0].token;
-    console.log(`AT: ${userData[0].token}`)
     let refresh_token = userData[0].refresh_token;
-    console.log(`RT: ${userData[0].refresh_token}`)
     let seller_id = userData[0].seller_id;
-    console.log(`UD: ${userData[0].seller_id}`)
+    
+    console.log("AT: ", access_token);
+    console.log("RT: ", refresh_token);
+    console.log("UD: ", seller_id);
+    
+    /* 
+        Si no existe ninguna credencial => linea 272
+        Si existe SOLO access_token, se debe probar si sigue valido y tratar de obtener un refresh_token
+        Si existe SOLO un refresh_token, se debe saltar a lo de adentro del if línea 306
+    */
 
-    let publications = [] // Array que contendrá los id de publicaciones
 
-    let scroll_id = "" // Variable que almacenará el scroll_id una vez obtenido
+    if(!access_token && !refresh_token){
+        console.log("No se obtuvo ninguna credencial para sincronizar.")
+        res.json({
+            "result": "Sin credenciales para sincronizar" // Revisar
+        })
+        return;
+    }
+
+    console.log("Respuesta del getUserData en sincronización: ");
+    
+    let publications = []; // Array que contendrá los id de publicaciones
+
+    let scroll_id = ""; // Variable que almacenará el scroll_id una vez obtenido
     let requestCounter = 0;
 
     while (true) {
@@ -285,10 +300,10 @@ app.get("/sync", async (req, res) => {
             const requestOptionsPublications = getPublicationsService.setRequestPublications(access_token, seller_id, scroll_id);
 
             // Realizamos la consulta y obtener un objeto con el scroll_id y los id de publicaciones obtenidas
-            responseRequestPublications = await getPublicationsService.doAsyncRequest(requestOptionsPublications, getPublicationsService.asyncCallback)
+            const responseRequestPublications = await getPublicationsService.doAsyncRequest(requestOptionsPublications, getPublicationsService.asyncCallback)
 
             if (responseRequestPublications.statusCode == 403 || responseRequestPublications.statusCode == 400 || responseRequestPublications.statusCode == 401) {
-                console.log(`# Se obtuvo un status code de ${responseRequestPublications.statusCode} en publications`);
+                console.log(`Se obtuvo un status code de ${responseRequestPublications.statusCode} en obtener publications`);
                 if(responseRequestPublications.statusCode == 400){
                     requestCounter++;
                 }
@@ -296,7 +311,9 @@ app.get("/sync", async (req, res) => {
 
                 try {
                     const responseRefreshToken = await getTokenService.doAsyncRequestRefresh(requestOptionsRefresh, getTokenService.asyncCallbackRefresh, req.session.user);
+                    
                     if (responseRefreshToken.access_token) {
+                        
                         access_token = responseRefreshToken.access_token;
                         refresh_token = responseRefreshToken.refresh_token;
                         seller_id = responseRefreshToken.user_id;
@@ -305,12 +322,13 @@ app.get("/sync", async (req, res) => {
                         continue;
                     }
                     else {
-                        throw new Error("No se obtuvo ningun access token en el refresh!")
+                        throw new Error("No se obtuvo ningun access token en el refresh")
                     }
-                } catch (error) {
-                    continue;
+                } catch (err) {
+                    console.log("Error al obtener access token en el refresh");
                 }
             }
+
             scroll_id = responseRequestPublications.scroll_id; // Seteamos el scroll_id
             
             if (scroll_id == null || scroll_id == undefined) break; // Cuando no hay más paginación salimos del bucle
@@ -318,8 +336,8 @@ app.get("/sync", async (req, res) => {
             // Concatenamos los ids obtenidos con los existentes
             publications = publications.concat(responseRequestPublications.publications_id);
 
-        } catch (error) {
-            throw new Error("Error inesperado")
+        } catch (err) {
+            console.log("Error inesperado al obtener publicaciones");
         }
     }
     
@@ -332,7 +350,7 @@ app.get("/sync", async (req, res) => {
             console.log(statusCode);
         })
 
-        let publicationsQuantity = `La cantidad de publicaciones obtenidas es: ${publications.length}`
+        const publicationsQuantity = `La cantidad de publicaciones obtenidas es: ${publications.length}`
 
         res.json({
             "result": publicationsQuantity // Respuesta que se envía al js del index
@@ -359,4 +377,3 @@ app.get("/logout", (req, res) => {
         }
     })
 });
-

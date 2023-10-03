@@ -1,5 +1,5 @@
 // Imports
-let request = require('request');
+const request = require('request');
 
 // Funcion para setear las options de la request
 function setRequestPublications(access_token, user_id, scroll_id){
@@ -53,7 +53,7 @@ function doAsyncRequest(requestOptions, asyncRequestCallback) {
 }   
 
 module.exports = {
-    setRequestPublications: setRequestPublications,
-    doAsyncRequest: doAsyncRequest,
-    asyncCallback: asyncCallback
+    setRequestPublications,
+    doAsyncRequest,
+    asyncCallback
 }
