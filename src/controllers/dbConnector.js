@@ -50,7 +50,9 @@ function saveUserData(access_token, refresh_token, user_id, user) {
                             } else {
                                 console.log("# 1 Resultado de UPDATE de saveUserData: ")
                                 resolv ({
-                                    seller_id: user_id
+                                    seller_id: user_id,
+                                    access_token,
+                                    refresh_token
                                 });
                             }
                         }
@@ -66,7 +68,9 @@ function saveUserData(access_token, refresh_token, user_id, user) {
                         } else {
                             console.log("# Resultado de INSERT: ")
                             resolv ({
-                                seller_id: user_id
+                                seller_id: user_id,
+                                access_token,
+                                refresh_token
                             });
                         }
                     })
@@ -167,11 +171,39 @@ function savePublication(user, seller_id, item_id, title, status, sub_status, pr
     //item_id es mi dato a consultar, necesito que si el item_id existe, actualice
 }
 
+// Almacenar información de vendedor PROBAMOS SOLO CON NICKNAME POR AHORA
+function saveSellerData(sellerDataObject){
+    return new Promise((resolv, reject) => {
+        connectorDbDashboard.query(`SELECT seller_id FROM ml_sellers WHERE seller_id = "${sellerDataObject.seller_id}"`, (err, result, filed) => {
+            if(err){
+                console.log(" ####### Error al obtener seller_id de la base de datos.");
+                reject(err);
+                
+            } else if(result.length > 0){
+                const query = `UPDATE ml_sellers SET nickname = "${sellerDataObject.nickname}" WHERE seller_id = "${sellerDataObject.seller_id}"`;
+                connectorDbDashboard.query(query, (err, result, filed) =>{
+                    if(err){
+                        console.log(" ####### Error al actualizar nickname del seller", sellerDataObject.seller_id);
+                        reject(err);
+                    }
+                    resolv(result);
+                    console.log(" ####### Nickname actualizado con exito");
+                })
+
+            } else {
+                console.log(" ####### No se ha encontrado el seller " + sellerDataObject.seller_id + " en la base de datos.");
+                resolv(result);
+            }
+        })
+    })
+}
+
 // Exportaciones
 module.exports = {
     connectDbDashboard: connectorDbDashboard,
     connectDb,
     saveUserData,
     savePublication,
-    updateUserData
+    updateUserData,
+    saveSellerData
 }

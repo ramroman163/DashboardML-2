@@ -1,5 +1,6 @@
 // Imports
 const request = require("request");
+const dbConnector = require("../controllers/dbConnector.js");
 
 function setRequestDataSeller(access_token, seller_id){
     const headers = {
@@ -16,14 +17,14 @@ function setRequestDataSeller(access_token, seller_id){
 
 async function asyncCallback(error, response, body){
     if(error) throw error;
-
     const responseSellerDataJSON = JSON.parse(body);
-    console.log(responseSellerDataJSON);
+    //console.log(responseSellerDataJSON);
 
-    if(response.statusCode === 200 && responseSellerDataJSON.length > 0){
+    if(response.statusCode === 200 && responseSellerDataJSON.id){
         // Normal seller data
+        const seller_id = responseSellerDataJSON.id;
         const nickname = responseSellerDataJSON.nickname;
-        const country_id = responseSellerDataJSON.country_id;
+        const country_id = responseSellerDataJSON.country_id; // País
         const first_name = responseSellerDataJSON.first_name;
         const last_name = responseSellerDataJSON.last_name;
         const email = responseSellerDataJSON.email;
@@ -39,6 +40,7 @@ async function asyncCallback(error, response, body){
         const seller_level_status = responseSellerDataJSON.seller_reputation?.power_seller_status; // Nivel de status del vendedor, como platinum o gold
         
         const sellerDataObject = {
+            seller_id,
             nickname,
             country_id,
             first_name,
@@ -55,7 +57,12 @@ async function asyncCallback(error, response, body){
             seller_level_status
         }
 
-        // saveSellerData(sellerDataObject)
+        try {
+            await dbConnector.saveSellerData(sellerDataObject);
+            return "Se ha guardado el nickname del seller exitosamente.";
+        } catch (error) {
+            return "Error al guardar el nickname del seller."
+        }
     }
 }
 
@@ -70,5 +77,7 @@ function doAsyncRequestSellerData(requestOptions, asyncCallback){
 }
 
 module.exports = {
-    setRequestDataSeller
+    setRequestDataSeller,
+    asyncCallback,
+    doAsyncRequestSellerData
 }

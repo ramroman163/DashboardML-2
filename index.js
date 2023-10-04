@@ -17,6 +17,7 @@ const getPublicationDataService = require("./src/services/getPublicationData.js"
 const getUserDataService = require("./src/services/getUserData.js");
 const getSellersUserService = require("./src/services/getSellersUser.js");
 const getProfileService = require("./src/services/getProfiles.js");
+const getSellerDataService = require("./src/services/getSellerData.js");
 
 // // Importamos nuestro controlador de BD
 const dbController = require("./src/controllers/dbConnector.js");
@@ -58,7 +59,7 @@ app.listen(PORT, () => {
 
 // Peticion a /
 app.get("/", (req, res) => {
-
+    // Si no hay sesión iniciada, se redirecciona al login
     if(!req.session.user || req.session.user === 0){
         res.render("login.ejs");
     } else {
@@ -73,11 +74,14 @@ app.get("/home", async (req, res) => {
         return;
     }
 
+    // Obtenemos perfiles del usuario que inició sesión
     let profiles = await getSellersUserService.getSellers(req.session.user);
     
     let dataUsers = [];
 
     let requestCounter = 0;
+
+    // REVISAR ESTO
 
     await Promise.all(profiles.map(async (profile) => {
         requestCounter = 0;
@@ -159,44 +163,37 @@ app.get("/auth", async (req, res) => {
         return;
     }
 
-    const code = req.query.code;
-    // Obtenemos el parametro code de la URL luego de que ML realice la autenticacion y nos redirija aquí
+    const code = req.query.code; // Obtenemos el parametro code de la URL luego de que ML realice la autenticacion y nos redirija aquí
 
-    const client_secret = getTokenService.getClientSecret();
-    // Retorna la variable preexistente client_secret
+    const client_secret = getTokenService.getClientSecret(); // Retorna la variable preexistente client_secret
 
-    const requestOptions = getTokenService.setRequest(code, client_secret);
-    // Armamos las options de la request de datos del usuario
+    const requestOptions = getTokenService.setRequest(code, client_secret); // Armamos las options de la request de datos del usuario
 
     try {   // Ejecutamos el request para obtener la data del seller,
             // para poder estructurar el código bien sin frenar los procesos
-        resultLink = await getTokenService.doAsyncRequest(requestOptions, getTokenService.asyncCallback, req.session.user);
-        console.log("# Resultado resultLink: ")
+        const resultLink = await getTokenService.doAsyncRequest(requestOptions, getTokenService.asyncCallback, req.session.user);
+
+        console.log("Resultado de vinculación: ")
         console.log(resultLink)
+
         if(resultLink.existentUser){
             res.render("dashboard.ejs", {  
                 sellers: req.session.sellers,
                 message: "Usuario vinculado en otra cuenta!"});
             return;
         }
-/*
-        const arraySellers = req.session.sellers;
-        let sellerNickname = "";
-        arraySellers.forEach((seller) => {
-            if(seller.seller_id == resultLink.seller_id){
-                sellerNickname = seller.nickname
-            }
-        })*/ // Revisar esto, no hace nada
 
         if(resultLink.seller_id){
-            //res.redirect(`/seller?seller_id=${resultLink.seller_id}&nickname=${sellerNickname}`)
+            const requestOptionsSellerData = getSellerDataService.setRequestDataSeller(resultLink.access_token, resultLink.seller_id);
+            const resultGetDataSeller = await getSellerDataService.doAsyncRequestSellerData(requestOptionsSellerData, getSellerDataService.asyncCallback);
+            console.log(resultGetDataSeller);
             res.redirect("/home")
             return;
         }
 
     } catch (err) {
         // Renderizamos el index.ejs con state "Error vinculando" en caso de error
-        //res.render("index.ejs", { state: "Error vinculando" });
+        console.log(err)
         res.render("dashboard.ejs", {  
             sellers: req.session.sellers,
             message: "Error vinculando"
@@ -213,8 +210,8 @@ app.get("/seller", (req, res) => {
 
     req.session.seller_id = req.query.seller_id;
     req.session.nickname = req.query.nickname;
-    console.log("# Session seller: " + req.session.seller_id);
-    console.log("# Session nickname: " + req.session.nickname);
+    console.log("Session seller:", req.session.seller_id);
+    console.log("Session nickname:", req.session.nickname);
 
     res.render("index.ejs", { state: req.session.nickname });
 })
@@ -224,8 +221,8 @@ app.post("/login", async (req, res) => {
     const username = req.body.username;
     const password = req.body.password;
 
-    console.log("Username: ", username);
-    console.log("Password: ", password);
+    console.log("Username:", username);
+    console.log("Password:", password);
 
     if (username && password) {
         const results = await getUserDataService.getUsers(username); // Solicitamos todas las contraseñas de la base de datos cuyo nombre de usuario coincida con el enviado por la función para poder comparar.
@@ -237,7 +234,7 @@ app.post("/login", async (req, res) => {
         } else {
             console.log("Inicio de sesión correcto");
             req.session.user = results[0].id;
-            console.log("Nuevo usuario en la sesión: " + req.session.user);
+            console.log("Nuevo usuario en la sesión:", req.session.user);
             res.redirect("/home");
             return;
         }

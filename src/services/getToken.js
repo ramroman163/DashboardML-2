@@ -39,7 +39,7 @@ async function asyncCallback(error, response, body, user) {
 
     if (responseJSON.access_token) {
         // Ya tenemos los access_token, refresh_token y user_id, los almacenamos en variables
-        const { access_token: access_token, refresh_token: refresh_token, user_id: user_id } = responseJSONRefresh;
+        const { access_token: access_token, refresh_token: refresh_token, user_id: user_id } = responseJSON;
         
         console.log("Almacenamos token"); // Línea para debug
         
