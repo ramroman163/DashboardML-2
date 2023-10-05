@@ -15,54 +15,48 @@ function setRequestDataSeller(access_token, seller_id){
     return options;
 }
 
+// modificada con ia
 async function asyncCallback(error, response, body){
-    if(error) throw error;
-    const responseSellerDataJSON = JSON.parse(body);
-    //console.log(responseSellerDataJSON);
+    if(error){
+        console.error("Error:", error);
+        throw error;
+    }
+    
+    if(response.statusCode !== 200){
+        console.error("(Callback getSellerData)-Código de estado no válido:", response.statusCode);
+        return "Código de estado no válido en la respuesta.";
+    }
 
-    if(response.statusCode === 200 && responseSellerDataJSON.id){
-        // Normal seller data
-        const seller_id = responseSellerDataJSON.id;
-        const nickname = responseSellerDataJSON.nickname;
-        const country_id = responseSellerDataJSON.country_id; // País
-        const first_name = responseSellerDataJSON.first_name;
-        const last_name = responseSellerDataJSON.last_name;
-        const email = responseSellerDataJSON.email;
-        // Reputation data
-        const seller_experience = responseSellerDataJSON.seller_experience; // ?
-        const total_transactions = responseSellerDataJSON.seller_reputation?.transactions?.total; // Total de transacciones
-        const completed_transactions = responseSellerDataJSON.seller_reputation?.transactions?.completed; // Total de transacciones COMPLETADAS
-        const canceled_transactions = responseSellerDataJSON.seller_reputation?.transactions?.canceled; // Total de transacciones CANCELADAS
-        const reputation_level = responseSellerDataJSON.seller_reputation?.level_id; // Nivel de reputación, númerico + color termometro
-        const positive_rating_transactions = responseSellerDataJSON.seller_reputation?.transactions?.ratings?.positive; // Porcentaje de transacciones positivas 
-        const negative_rating_transactions = responseSellerDataJSON.seller_reputation?.transactions?.ratings?.negative; // Porcentaje de transacciones negativas
-        const neutral_rating_transactions = responseSellerDataJSON.seller_reputation?.transactions?.ratings?.neutral; // Porcentaje de transacciones neutras
-        const seller_level_status = responseSellerDataJSON.seller_reputation?.power_seller_status; // Nivel de status del vendedor, como platinum o gold
-        
+    try {
+        const responseSellerDataJSON = JSON.parse(body);
+        //console.log(responseSellerDataJSON);
+    
         const sellerDataObject = {
-            seller_id,
-            nickname,
-            country_id,
-            first_name,
-            last_name,
-            email,
-            seller_experience,
-            total_transactions,
-            completed_transactions,
-            canceled_transactions,
-            reputation_level,
-            positive_rating_transactions,
-            negative_rating_transactions,
-            neutral_rating_transactions,
-            seller_level_status
+            // Normal seller data
+            seller_id: responseSellerDataJSON.id,
+            nickname: responseSellerDataJSON.nickname,
+            country_id: responseSellerDataJSON.country_id, // País
+            first_name: responseSellerDataJSON.first_name,
+            last_name: responseSellerDataJSON.last_name,
+            email: responseSellerDataJSON.email,
+            // Reputation data
+            seller_experience: responseSellerDataJSON.seller_experience, // ?
+            total_transactions: responseSellerDataJSON.seller_reputation?.transactions?.total, // Total de transacciones
+            completed_transactions: responseSellerDataJSON.seller_reputation?.transactions?.completed, // Total de transacciones COMPLETADAS
+            canceled_transactions: responseSellerDataJSON.seller_reputation?.transactions?.canceled, // Total de transacciones CANCELADAS
+            reputation_level: responseSellerDataJSON.seller_reputation?.level_id, // Nivel de reputación, númerico + color termometro
+            positive_rating_transactions: responseSellerDataJSON.seller_reputation?.transactions?.ratings?.positive, // Porcentaje de transacciones positivas
+            negative_rating_transactions: responseSellerDataJSON.seller_reputation?.transactions?.ratings?.negative, // Porcentaje de transacciones negativas
+            neutral_rating_transactions: responseSellerDataJSON.seller_reputation?.transactions?.ratings?.neutral, // Porcentaje de transacciones neutras
+            seller_level_status: responseSellerDataJSON.seller_reputation?.power_seller_status // Nivel de status del vendedor, como platinum o gold
         }
 
-        try {
-            await dbConnector.saveSellerData(sellerDataObject);
-            return "Se ha guardado el nickname del seller exitosamente.";
-        } catch (error) {
-            return "Error al guardar el nickname del seller."
-        }
+        await dbConnector.saveSellerData(sellerDataObject);
+        return "Se ha guardado el nickname del seller exitosamente.";
+        
+    } catch (error) {
+        console.error("(Callback getSellerData)-Error al guardar en base de datos o acceder al objeto:", error);
+        return "Error al guardar el nickname del seller."
     }
 }
 

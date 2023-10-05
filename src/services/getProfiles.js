@@ -1,3 +1,5 @@
+// hace lo mismo que getSellerData!! ver.
+
 const request = require('request');
 
 function setRequestProfile(access_token, seller_id){
@@ -29,7 +31,6 @@ async function asyncCallbackProfile(error, response, body){
         return {
             statusCode: response.statusCode
         }
-        //throw new Error("No se obtuvo el nickname del perfil")
     }
 }
 

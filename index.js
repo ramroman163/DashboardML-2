@@ -76,9 +76,7 @@ app.get("/home", async (req, res) => {
 
     // Obtenemos perfiles del usuario que inició sesión
     let profiles = await getSellersUserService.getSellers(req.session.user);
-    
     let dataUsers = [];
-
     let requestCounter = 0;
 
     // REVISAR ESTO
@@ -164,9 +162,7 @@ app.get("/auth", async (req, res) => {
     }
 
     const code = req.query.code; // Obtenemos el parametro code de la URL luego de que ML realice la autenticacion y nos redirija aquí
-
     const client_secret = getTokenService.getClientSecret(); // Retorna la variable preexistente client_secret
-
     const requestOptions = getTokenService.setRequest(code, client_secret); // Armamos las options de la request de datos del usuario
 
     try {   // Ejecutamos el request para obtener la data del seller,

@@ -3,14 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
     <title>Dashboard</title>
 </head>
-<body>
-    <h1>Cuentas de Mercado Libre almacenadas</h1>
-    <ul>
+<body class="p-3">
+    <header class="mb-4">
+        <h1>Cuentas de Mercado Libre almacenadas</h1>
+    </header>
+    <ul class="p-0 d-flex flex-column">
         <% for(let i=0; i<sellers.length; i++){ %>
             <a class="button__seller" href="" value= <%=sellers[i].seller_id%> >
-                <button style="width: 200px; height: 100px; text-align: center;">
+                <button class="btn btn-outline-primary">
                     <%= sellers[i].nickname %>
                 </button>
             </a>
@@ -19,11 +22,11 @@
     </ul>
     <h3><%= message %></h3>
     <a style="text-decoration: none;" class="redirect__auth" href="#">
-        <button class="button__link" type="button">Vincular cuenta</button>
+        <button class="button__link btn btn-outline-primary" type="button">Vincular cuenta</button>
     </a>
 
     <a href="/logout">
-        <button type="button">Cerrar sesión</button>
+        <button class="btn btn-outline-danger" type="button">Cerrar sesión</button>
     </a>
 
     <script src="setAuth.js"></script>
