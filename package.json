@@ -19,6 +19,11 @@
     "request": "^2.88.2"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "3.0.1",
+    "picocolors": "1.0.0",
+    "standard": "17.1.0"
+  },
+  "eslintConfig": {
+    "extends": "standard"
   }
 }
