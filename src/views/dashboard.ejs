@@ -12,35 +12,15 @@
     </header>
     <h2 class="mb-4">Cuentas de Mercado Libre almacenadas</h2>
     <ul class="p-0 d-flex flex-column">
-        <% var acum = 0%>
-        <% for(let i=0; i<sellers.length; i++){ %>
-            <% if(sellers[i].state !== 'not linked') {%>
-            <a class="button__seller" href="" value= <%=sellers[i].seller_id%> >
-                <button class="btn btn-outline-primary">
-                    <%= sellers[i].nickname %>
-                </button>
-            </a>
-            <br>
-            <% } else {%>
-            <% acum+=1 %>
-            <% } %> 
-        <% } %>
-    </ul>
-    <% if (acum > 0) {%>
-    <h2 class="mb-4">Cuentas de Mercado Libre almacenadas NO VINCULADAS</h2>
-    <ul class="p-0 d-flex flex-column">
-        <% for(let i=0; i<sellers.length; i++){ %>
-            <% if(sellers[i].state === 'not linked') {%>
-            <a class="button__seller" href="" value= <%=sellers[i].seller_id%> >
-                <button class="btn btn-outline-primary">
-                    <%= sellers[i].nickname %>
-                </button>
-            </a>
-            <br>
-            <% } %>
-        <% } %>
-    </ul>
+    <% for(let i=0; i<sellers.length; i++){ %>
+        <a class="button__seller" href="" value= <%=sellers[i].sellerId%> >
+            <button class="btn btn-outline-primary">
+                <%= sellers[i].nickname %>
+            </button>
+        </a>
+        <br>
     <% } %>
+    </ul>
     <h3><%= message %></h3>
     <a style="text-decoration: none;" class="redirect__auth" href="#">
         <button class="button__link btn btn-outline-primary" type="button">Vincular cuenta</button>

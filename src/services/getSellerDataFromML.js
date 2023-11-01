@@ -56,12 +56,12 @@ async function asyncCallback (error, response, body) {
 
     await dbConnector.saveSellerData(sellerDataObject)
     return {
-      message: 'Se ha guardado el nickname del seller exitosamente.',
+      message: 'Se ha guardado la información del seller exitosamente.',
       nickname: sellerDataObject.nickname
     }
   } catch (error) {
     console.error('(Callback getSellerData)-Error al guardar en base de datos o acceder al objeto:', error)
-    return 'Error al guardar el nickname del seller.'
+    return 'Error al guardar la información del seller.'
   }
 }
 

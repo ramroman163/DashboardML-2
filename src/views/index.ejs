@@ -14,13 +14,20 @@
     </header>
     <!-- state es un valor que vamos pasando cuando renderizamos -->
     <h4 class="mb-4">Cuenta seleccionada: <span class="link_state"> <%=state%> </span></h4>
-    <button class="button__sync btn btn-outline-primary" type="button">Sincronizar publicaciones</button>
-    <p class="status__sync mt-3"></p>
-    
+    <% if(locals.message){%>
+        <p class="mb-4"><%= locals.message %></p>
+        <a style="text-decoration: none;" class="redirect__logout_auth" href="#">
+            <button class="button__link btn btn-outline-primary mb-4" type="button">Vincular cuenta nuevamente</button>
+        </a>
+        <br>
+    <% } else {%>
+        <button class="button__sync btn btn-outline-primary" type="button">Sincronizar publicaciones</button>
+        <p class="status__sync mt-3"></p>
+    <% }%>
     <a href="/logout">
         <button class="btn btn-outline-danger" type="button">Cerrar sesión</button>
     </a>
-
+    <script src="setLogoutAuth.js"></script> 
     <script src="sync.js"></script> 
 </body>
 </html>

@@ -3,13 +3,13 @@ const pc = require('picocolors')
 const request = require('request')
 
 // Funcion para setear las options de la request
-function setRequestPublications (access_token, user_id, scroll_id) {
+function setRequestPublications (accessToken, userId, scrollId) {
   const headers = {
-    Authorization: `Bearer: ${access_token}`
+    Authorization: `Bearer: ${accessToken}`
   }
 
   const options = {
-    url: `https://api.mercadolibre.com/users/${user_id}/items/search?search_type=scan&limit=2&scroll_id=${scroll_id}`,
+    url: `https://api.mercadolibre.com/users/${userId}/items/search?search_type=scan&limit=2&scroll_id=${scrollId}`,
     headers
   }
 

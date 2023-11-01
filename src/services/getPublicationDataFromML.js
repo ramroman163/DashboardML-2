@@ -32,7 +32,7 @@ async function asyncCallback (error, response, body, user) {
     const sub_status = responsePublicationDataJSON[0].body.sub_status
     const price = responsePublicationDataJSON[0].body.price
     const original_price = responsePublicationDataJSON[0].body.original_price === null ? price : responsePublicationDataJSON[0].body.original_price
-    const available_quantity = responsePublicationDataJSON[0].body.available_quantity
+    const available_quantity = responsePublicationDataJSON[0].body.available_quantity ?? 0
     const thumbnail = responsePublicationDataJSON[0].body.thumbnail
     const permalink = responsePublicationDataJSON[0].body.permalink
     const listing_type_id = responsePublicationDataJSON[0].body.listing_type_id

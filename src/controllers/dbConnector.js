@@ -172,24 +172,40 @@ function savePublication (user, seller_id, item_id, title, status, sub_status, p
 
 // Almacenar información de vendedor PROBAMOS SOLO CON NICKNAME POR AHORA
 function saveSellerData (sellerDataObject) {
-  return new Promise((resolv, reject) => {
+  return new Promise((resolve, reject) => {
     connectorDbDashboard.query(`SELECT seller_id FROM ml_sellers WHERE seller_id = "${sellerDataObject.seller_id}"`, (err, result, filed) => {
       if (err) {
         console.log(' ####### Error al obtener seller_id de la base de datos.')
         reject(err)
       } else if (result.length > 0) {
-        const query = `UPDATE ml_sellers SET nickname = "${sellerDataObject.nickname}" WHERE seller_id = "${sellerDataObject.seller_id}"`
+        const query = `UPDATE ml_sellers 
+        SET 
+        nickname = "${sellerDataObject.nickname}",
+        country_id = "${sellerDataObject.country_id}",
+        first_name = "${sellerDataObject.first_name}",
+        last_name = "${sellerDataObject.last_name}",
+        email = "${sellerDataObject.email}",
+        seller_experience = "${sellerDataObject.seller_experience}",
+        total_transactions = ${sellerDataObject.total_transactions},
+        completed_transactions = ${sellerDataObject.completed_transactions},
+        canceled_transactions = ${sellerDataObject.canceled_transactions},
+        reputation_level = ${sellerDataObject.reputation_level},
+        positive_rating_transactions = ${sellerDataObject.positive_rating_transactions},
+        negative_rating_transactions = ${sellerDataObject.negative_rating_transactions},
+        neutral_rating_transactions = ${sellerDataObject.neutral_rating_transactions},
+        seller_level_status = ${sellerDataObject.seller_level_status} 
+        WHERE seller_id = "${sellerDataObject.seller_id}"`
         connectorDbDashboard.query(query, (err, result, filed) => {
           if (err) {
             console.log(' ####### Error al actualizar nickname del seller', sellerDataObject.seller_id)
             reject(err)
           }
-          resolv(result)
-          console.log(' ####### Nickname actualizado con exito')
+          resolve(result)
+          console.log('Seller actualizado con exito')
         })
       } else {
-        console.log(' ####### No se ha encontrado el seller ' + sellerDataObject.seller_id + ' en la base de datos.')
-        resolv(result)
+        console.log('No se ha encontrado el seller ' + sellerDataObject.seller_id + ' en la base de datos.')
+        resolve(result)
       }
     })
   })
