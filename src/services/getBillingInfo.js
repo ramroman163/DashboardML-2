@@ -30,7 +30,8 @@ async function asyncCallback (error, result, body) {
       console.log(pc.red('No se obtuvo nada en billing. Status code: '), result.statusCode)
     }
   } catch (error) {
-    console.error(pc.bgRed('Error al procesar info en getBillingInfo'), error)
+    // console.error(pc.bgRed('Error al procesar info en getBillingInfo'), error)
+    console.error(pc.bgRed('Error al procesar info en getBillingInfo'))
   }
 }
 

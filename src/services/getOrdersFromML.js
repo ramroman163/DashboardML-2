@@ -15,7 +15,7 @@ function setRequest (accessToken, scrollId, sellerId) {
   return OPTIONS
 }
 
-async function asyncCallback (error, response, body, accessToken) {
+async function asyncCallback (error, response, body, accessToken, sessionUserId) {
   if (error) {
     console.error(pc.red('Error en getOrders:', error))
     throw error
@@ -25,25 +25,26 @@ async function asyncCallback (error, response, body, accessToken) {
 
     if (response.statusCode === 200 && responseOrders.results.length > 0) {
       const orderData = []
-
+      console.log('ScrollID: ', pc.bgYellow(responseOrders.paging.scroll_id))
       await Promise.all(
         responseOrders.results.map(async (orderInfo) => {
           const orderObject = {
-            id: orderInfo.id,
-            date_closed: orderInfo.date_closed,
-            pack_id: orderInfo.pack_id,
+            user: sessionUserId,
             seller_id: orderInfo.seller.id,
-            shipping_id: orderInfo.shipping.id,
+            date_closed: orderInfo.date_closed,
+            id: orderInfo.id,
+            pack_id: orderInfo.pack_id,
+            shipping_id: orderInfo.shipping?.id,
             shipping_mode: orderInfo.shipping?.mode ?? null, // No lo encontré
             item_id: orderInfo.order_items[0]?.item?.id ?? null,
             item_title: orderInfo.order_items[0]?.item?.title ?? null,
-            item_price: orderInfo.order_items[0]?.unit_price ?? 0,
+            item_price: orderInfo.order_items[0]?.unit_price ?? 0.0,
             total_amount: orderInfo.total_amount,
-            item_quantity: orderInfo.order_items[0].quantity,
+            item_quantity: orderInfo.order_items[0]?.quantity,
             buyer_id: orderInfo.buyer.id,
             buyer_nickname: orderInfo.buyer.nickname,
             buyer_first_name: orderInfo.buyer?.first_name ?? '',
-            buyer_last_name: orderInfo.buyer.last_name ?? '',
+            buyer_last_name: orderInfo.buyer?.last_name ?? '',
             billing_doc_type: '',
             billing_doc_number: ''
           }
@@ -56,8 +57,8 @@ async function asyncCallback (error, response, body, accessToken) {
       )
 
       return {
-        scrollId: responseOrders.scroll_id,
-        statusCode: responseOrders.statusCode,
+        scrollId: responseOrders.paging.scroll_id,
+        statusCode: response.statusCode,
         orderData
       }
     } else {
@@ -76,10 +77,10 @@ async function asyncCallback (error, response, body, accessToken) {
   }
 }
 
-function doAsyncRequest (requestOptions, asyncCallback, accessToken) {
+function doAsyncRequest (requestOptions, asyncCallback, accessToken, sessionUserId) {
   return new Promise((resolve, reject) => {
     request(requestOptions, (error, response, body) => {
-      asyncCallback(error, response, body, accessToken)
+      asyncCallback(error, response, body, accessToken, sessionUserId)
         .then((value) => resolve(value))
         .catch((error) => reject(error))
     })

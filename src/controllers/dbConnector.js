@@ -170,7 +170,7 @@ function savePublication (user, seller_id, item_id, title, status, sub_status, p
   // item_id es mi dato a consultar, necesito que si el item_id existe, actualice
 }
 
-// Almacenar información de vendedor PROBAMOS SOLO CON NICKNAME POR AHORA
+// Almacenar información de vendedor
 function saveSellerData (sellerDataObject) {
   return new Promise((resolve, reject) => {
     connectorDbDashboard.query(`SELECT seller_id FROM ml_sellers WHERE seller_id = "${sellerDataObject.seller_id}"`, (err, result, filed) => {
@@ -211,6 +211,101 @@ function saveSellerData (sellerDataObject) {
   })
 }
 
+function saveOrderData (orderDataObject) {
+  const sqlFind = `SELECT id FROM ml_orders WHERE order_id = '${orderDataObject.id}' AND item_id = '${orderDataObject.item_id}'`
+
+  connectorDbDashboard.query(sqlFind, (error, result, filed) => {
+    if (error) {
+      console.error('Error obteniendo order existente', error)
+    }
+
+    if (result.length > 0) {
+      updateOrderData(orderDataObject, result[0].id)
+    } else {
+      const sql = `
+      INSERT INTO ml_orders (
+        usuario,
+        seller_id,
+        date_closed,
+        order_id,
+        pack_id,
+        shipping_id,
+        shipping_mode,
+        item_id,
+        item_title,
+        item_price,
+        total_amount,
+        item_quantity,
+        buyer_id,
+        buyer_nickname,
+        buyer_first_name,
+        buyer_last_name,
+        billing_doc_type,
+        billing_doc_number
+      ) VALUES (
+        ${orderDataObject.user},
+        '${orderDataObject.seller_id}',
+        '${orderDataObject.date_closed}',
+        '${orderDataObject.id}',
+        '${orderDataObject.pack_id}',
+        '${orderDataObject.shipping_id}',
+        '${orderDataObject.shipping_mode}',
+        '${orderDataObject.item_id}',
+        '${orderDataObject.item_title}',
+        ${orderDataObject.item_price},
+        ${orderDataObject.total_amount},
+        ${orderDataObject.item_quantity},
+        '${orderDataObject.buyer_id}',
+        '${orderDataObject.buyer_nickname}',
+        '${orderDataObject.buyer_first_name}',
+        '${orderDataObject.buyer_last_name}',
+        '${orderDataObject.billing_doc_type}',
+        '${orderDataObject.billing_doc_number}'
+      )
+      `
+      connectorDbDashboard.query(sql, (err, result, filed) => {
+        if (err) {
+          console.error(pc.red('Error en guardando orders'), err)
+        }
+        console.log('Order guardada.')
+        console.log(result)
+      })
+    }
+  })
+}
+
+function updateOrderData (orderDataObject, id) {
+  const sql = `
+  UPDATE ml_orders
+  SET
+    usuario = ${orderDataObject.user},
+    seller_id = '${orderDataObject.seller_id}',
+    date_closed = '${orderDataObject.date_closed}',
+    pack_id = '${orderDataObject.pack_id}',
+    shipping_id = '${orderDataObject.shipping_id}',
+    shipping_mode = '${orderDataObject.shipping_mode}',
+    item_id = '${orderDataObject.item_id}',
+    item_title = '${orderDataObject.item_title}',
+    item_price = ${orderDataObject.item_price},
+    total_amount = ${orderDataObject.total_amount},
+    item_quantity = ${orderDataObject.item_quantity},
+    buyer_id = '${orderDataObject.buyer_id}',
+    buyer_nickname = '${orderDataObject.buyer_nickname}',
+    buyer_first_name = '${orderDataObject.buyer_first_name}',
+    buyer_last_name = '${orderDataObject.buyer_last_name}',
+    billing_doc_type = '${orderDataObject.billing_doc_type}',
+    billing_doc_number = '${orderDataObject.billing_doc_number}'
+  WHERE id = ${id}
+  `
+
+  connectorDbDashboard.query(sql, (error, result, filed) => {
+    if (error) {
+      console.error(pc.bgRed('Error actualizando order'))
+    }
+    console.log(pc.bgGreen('Order actualizada'))
+  })
+}
+
 // Exportaciones
 module.exports = {
   connectDbDashboard: connectorDbDashboard,
@@ -218,5 +313,6 @@ module.exports = {
   saveUserData,
   savePublication,
   updateUserData,
-  saveSellerData
+  saveSellerData,
+  saveOrderData
 }

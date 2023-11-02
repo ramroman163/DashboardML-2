@@ -4,6 +4,7 @@ const getUserDataService = require('./getUserDataFromBD.js')
 const getOrdersFromMLService = require('./getOrdersFromML.js')
 const getTokenService = require('./getTokenFromML.js')
 const pc = require('picocolors')
+const { saveOrderData } = require('../controllers/dbConnector.js')
 
 async function processOrders (sessionSellerId, sessionUserId) {
   console.log(pc.bgMagenta('PROCESO ORDERS'))
@@ -21,7 +22,7 @@ async function processOrders (sessionSellerId, sessionUserId) {
     }
   }
 
-  const orders = []
+  let orders = []
 
   let scrollId = '' // Variable que almacenará el scroll_id una vez obtenido
   let requestCounter = 0
@@ -37,10 +38,10 @@ async function processOrders (sessionSellerId, sessionUserId) {
 
       const requestOptionsOrders = getOrdersFromMLService.setRequest(accessToken, scrollId, sellerId)
 
-      const responseRequestOrders = await getOrdersFromMLService.doAsyncRequest(requestOptionsOrders, getOrdersFromMLService.asyncCallback, accessToken)
+      const responseRequestOrders = await getOrdersFromMLService.doAsyncRequest(requestOptionsOrders, getOrdersFromMLService.asyncCallback, accessToken, sessionUserId)
 
       if (commonStatusCodeErrors.includes(responseRequestOrders.statusCode)) {
-        console.log(`Se obtuvo un status code de ${responseRequestOrders.statusCode} en obtener publications`)
+        console.log(`Se obtuvo un status code de ${responseRequestOrders.statusCode} en obtener orders`)
         if (responseRequestOrders.statusCode === 400) {
           requestCounter++
         }
@@ -63,13 +64,15 @@ async function processOrders (sessionSellerId, sessionUserId) {
           console.log(pc.red('Error al obtener access token en el refresh: ', err))
         }
       }
-
-      scrollId = responseRequestOrders.scroll_id // Seteamos el scroll_id
-
+      const responseOrders = responseRequestOrders.orderData
+      scrollId = responseRequestOrders.scrollId // Seteamos el scroll_id
+      console.log('ScrollID: ', pc.bgMagenta(scrollId))
       // console.log(pc.gray('response array: '))
       // console.log(responseRequestOrders.orderData)
       // Concatenamos los ids obtenidos con los existentes
-      orders.push(responseRequestOrders.orderData)
+      if (responseOrders) {
+        orders = [...orders, ...responseOrders]
+      }
 
       if (scrollId === null || scrollId === undefined) break // Cuando no hay más paginación salimos del bucle
     } catch (error) {
@@ -77,12 +80,28 @@ async function processOrders (sessionSellerId, sessionUserId) {
       console.log(error)
     }
   }
-  // console.log(pc.gray('Orders array: '))
-  // console.log(orders)
+  console.log(pc.gray('Orders array: '))
+  console.log(orders)
+
+  if (orders.length) {
+    console.log(pc.bgBlue('Ordenes obtenidas: '), orders)
+
+    await Promise.all(
+      orders.map(async (orderObject) => {
+        await saveOrderData(orderObject)
+      })
+    )
+  } else if (requestCounter >= 5) {
+    console.error(pc.bgRed('Error al obtener ordenes'))
+    return {
+      message: 'Error al obtener ordenes'
+    }
+  } else {
+    console.log(pc.bgMagenta('No se obtuvo ninguna orden'))
+  }
+
   return {
-    orders,
-    requestCounter,
-    accessToken
+    message: `Ordenes obtenidas: ${orders.length}`
   }
 }
 

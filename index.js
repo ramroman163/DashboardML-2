@@ -200,15 +200,7 @@ app.get('/sync', async (req, res) => {
 
   const { publications, requestCounter, accessToken } = await processPublications(req.session.seller_id, req.session.user)
 
-  const { orders, requestCounter: requestCounterOrders } = await processOrders(req.session.seller_id, req.session.user)
-  console.log(pc.bgMagenta('Ordenes obtenidas: ', orders))
-  if (orders.length) {
-    console.log(pc.bgBlue('Ordenes obtenidas: '), orders)
-  } else if (requestCounterOrders >= 5) {
-    console.error(pc.bgRed('Error al obtener ordenes'))
-  } else {
-    console.log(pc.bgMagenta('No se obtuvo ninguna orden'))
-  }
+  const { message } = await processOrders(req.session.seller_id, req.session.user)
 
   if (publications.length) { // Si tenemos ids, realizamos las consultas para obtener la informacion y guardarla en la BD
     publications.forEach(async (id) => {
@@ -218,10 +210,10 @@ app.get('/sync', async (req, res) => {
       console.log(statusCode)
     })
 
-    const publicationsQuantity = `La cantidad de publicaciones obtenidas es: ${publications.length}`
+    const syncResult = `La cantidad de publicaciones obtenidas es: ${publications.length}. ${message}`
 
     res.json({
-      result: publicationsQuantity // Respuesta que se envía al js del index
+      result: syncResult // Respuesta que se envía al js del index
     })
   } else if (!publications.length && requestCounter >= 5) {
     res.json({
