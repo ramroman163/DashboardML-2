@@ -39,7 +39,7 @@ async function asyncCallback (error, response, body, user) {
     const logistic_type = responsePublicationDataJSON[0].body.shipping.logistic_type
     const self_service = responsePublicationDataJSON[0].body.self_service
     const free_shipping = responsePublicationDataJSON[0].body.shipping.free_shipping
-    const mandatory_free_shipping = responsePublicationDataJSON[0].body.mandatory_free_shipping === undefined ? responsePublicationDataJSON[0].body.shipping.free_shipping : responsePublicationDataJSON[0].body.mandatory_free_shipping
+    const mandatory_free_shipping = responsePublicationDataJSON[0].body.shipping?.tags?.includes('mandatory_free_shipping')
     const local_pick_up = responsePublicationDataJSON[0].body.shipping.local_pick_up
     // LLamamos al servicio para almacenar la informacion
     await dbConnector.savePublication(user, seller_id, item_id, title, status, sub_status, price, original_price, available_quantity,
