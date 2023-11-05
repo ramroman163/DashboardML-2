@@ -306,6 +306,90 @@ function updateOrderData (orderDataObject, id) {
   })
 }
 
+function saveShippingData (shippingDataObject, user) {
+  const sql = `SELECT shipping_id FROM ml_shippings WHERE shipping_id = ${shippingDataObject.shipping_id} AND usuario = ${user}`
+
+  connectorDbDashboard.query(sql, (err, result, filed) => {
+    if (err) {
+      console.log('Error al obtener id de shipping')
+    }
+
+    if (result.length > 0) {
+      console.log(pc.yellow(`Ya existe el shipping ${shippingDataObject.shipping_id}`))
+      updateShippingData(shippingDataObject, user)
+    } else {
+      const sqlInsert = `
+      INSERT INTO ml_shippings (
+        usuario,
+        seller_id,
+        shipping_id,
+        state_id,
+        state_name,
+        status,
+        date_created,
+        country_id,
+        country_name,
+        city_name,
+        lat,
+        lon,
+        address_line,
+        base_cost) 
+        VALUES (${shippingDataObject.usuario},
+        "${shippingDataObject.seller_id}",
+        "${shippingDataObject.shipping_id}",
+        "${shippingDataObject.state_id}",
+        "${shippingDataObject.state_name}",
+        "${shippingDataObject.status}",
+        "${shippingDataObject.date_created}",
+        "${shippingDataObject.country_id}",
+        "${shippingDataObject.country_name}",
+        "${shippingDataObject.city_name}",
+        "${shippingDataObject.lat}",
+        "${shippingDataObject.long}",
+        "${shippingDataObject.address_line}",
+        ${shippingDataObject.base_cost})
+      `
+      connectorDbDashboard.query(sqlInsert, (err, result, filed) => {
+        if (err) {
+          console.error(pc.red('Error insertando shipping'))
+          console.log(err)
+        }
+        console.log(pc.green(`Shipping ${shippingDataObject.shipping_id} insertado`))
+      })
+    }
+  })
+}
+
+function updateShippingData (shippingDataObject, user) {
+  const sql = `
+    UPDATE ml_shippings
+    SET
+      usuario = ${shippingDataObject.usuario},
+      seller_id = "${shippingDataObject.seller_id}",
+      shipping_id = "${shippingDataObject.shipping_id}",
+      state_id = "${shippingDataObject.state_id}",
+      state_name = "${shippingDataObject.state_name}",
+      status = "${shippingDataObject.status}",
+      date_created = "${shippingDataObject.date_created}",
+      country_id = "${shippingDataObject.country_id}",
+      country_name = "${shippingDataObject.country_name}",
+      city_name = "${shippingDataObject.city_name}",
+      lat = "${shippingDataObject.lat}",
+      lon = "${shippingDataObject.long}",
+      address_line = "${shippingDataObject.address_line}",
+      base_cost = ${shippingDataObject.base_cost}
+    WHERE usuario = ${user} AND id = ${shippingDataObject.shipping_id}  
+    `
+
+  connectorDbDashboard.query(sql, (err, result, filed) => {
+    if (err) {
+      console.error(pc.red('Error actualizando shipping'))
+      throw err
+    }
+    console.log(pc.green(`Shipping ${shippingDataObject.shipping_id} actualizado`))
+  })
+}
+
 // Exportaciones
 module.exports = {
   connectDbDashboard: connectorDbDashboard,
@@ -314,5 +398,6 @@ module.exports = {
   savePublication,
   updateUserData,
   saveSellerData,
-  saveOrderData
+  saveOrderData,
+  saveShippingData
 }

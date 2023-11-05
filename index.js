@@ -7,7 +7,6 @@ const session = require('express-session')
 const bcryptjs = require('bcryptjs')
 const dotenv = require('dotenv')
 const pc = require('picocolors')
-const request = require('request')
 
 // Seteamos el archivo .env
 dotenv.config({ path: './src/env/.env' })
@@ -25,6 +24,7 @@ const dbController = require('./src/controllers/dbConnector.js')
 const { processPublications } = require('./src/services/processPublications.js')
 const { checkSellerData } = require('./src/services/checkSellerData.js')
 const { processOrders } = require('./src/services/processOrders.js')
+const { processShippings } = require('./src/services/processShippings.js')
 
 // Constantes
 const PORT = 3000 // Puerto de app
@@ -201,6 +201,10 @@ app.get('/sync', async (req, res) => {
   const { publications, requestCounter, accessToken } = await processPublications(req.session.seller_id, req.session.user)
 
   const { message } = await processOrders(req.session.seller_id, req.session.user)
+
+  const resultShippings = await processShippings(req.session.seller_id, req.session.user)
+
+  console.log(resultShippings)
 
   if (publications.length) { // Si tenemos ids, realizamos las consultas para obtener la informacion y guardarla en la BD
     publications.forEach(async (id) => {
