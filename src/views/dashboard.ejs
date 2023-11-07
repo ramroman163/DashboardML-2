@@ -11,7 +11,7 @@
         <h1>Bienvenido, <%=username%></h1>
     </header>
     <h2 class="mb-4">Cuentas de Mercado Libre almacenadas</h2>
-    <ul class="p-0 d-flex flex-column">
+    <ul class="mb-0 p-0 d-flex flex-column">
     <% for(let i=0; i<sellers.length; i++){ %>
         <a class="button__seller" href="" value= <%=sellers[i].sellerId%> >
             <button class="btn btn-outline-primary">
@@ -21,12 +21,12 @@
         <br>
     <% } %>
     </ul>
-    <h3><%= message %></h3>
-    <a style="text-decoration: none;" class="redirect__auth" href="#">
+    <h3 class="mb-4"><%= message %></h3>
+    <a style="text-decoration: none;" class="redirect__auth mt-4" href="#">
         <button class="button__link btn btn-outline-primary" type="button">Vincular cuenta</button>
     </a>
 
-    <a href="/logout">
+    <a href="/logout" class="mt-4">
         <button class="btn btn-outline-danger" type="button">Cerrar sesión</button>
     </a>
 

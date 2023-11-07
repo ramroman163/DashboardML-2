@@ -13,16 +13,23 @@ async function processShippings (sessionSellerId, sessionUserId) {
 
   const shippingIds = await getShippingIdFromBD(sessionSellerId, sessionUserId)
   console.log('Shipping ID obtenidas: ', shippingIds)
+
+  let counterShippings = 0
+
   await Promise.all(
     shippingIds.map(async (shippingObject) => {
       const optionsRequest = getShippingDataFromMLService.setOptions(shippingObject.shipping_id, accessToken)
       console.log(optionsRequest)
-      await getShippingDataFromMLService.doAsyncCallback(optionsRequest, getShippingDataFromMLService.asyncCallback, sessionUserId)
+      const result = await getShippingDataFromMLService.doAsyncCallback(optionsRequest, getShippingDataFromMLService.asyncCallback, sessionUserId)
+      if (result.processed) {
+        counterShippings += 1
+      }
     })
   )
 
   return {
-    message: 'Shippings procesadas'
+    message: 'Shippings procesadas',
+    shippings: counterShippings
   }
 }
 

@@ -44,8 +44,14 @@ async function asyncCallback (error, response, body, sessionUserId) {
       }
       console.log(shippingObject)
       await saveShippingData(shippingObject, sessionUserId)
+      return {
+        processed: true
+      }
     } else {
       console.error('Error en la respuesta obtenida de shippings: ', response.statusCode)
+      return {
+        processed: false
+      }
     }
   } catch (error) {
     console.error(pc.red('Error al procesar response de shippings', error))

@@ -15,7 +15,6 @@ function setRequest (accessToken, sellerId) {
   return options
 }
 
-// modificada con ia
 async function asyncCallback (error, response, body) {
   if (error) {
     console.error('Error:', error)
@@ -56,7 +55,7 @@ async function asyncCallback (error, response, body) {
 
     await dbConnector.saveSellerData(sellerDataObject)
     return {
-      message: 'Se ha guardado la información del seller exitosamente.',
+      message: `Se ha guardado la información del seller ${sellerDataObject.nickname} exitosamente`,
       nickname: sellerDataObject.nickname
     }
   } catch (error) {

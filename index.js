@@ -127,9 +127,13 @@ app.get('/auth', async (req, res) => {
 
     if (resultLink.seller_id) {
       const requestOptionsSellerData = getSellerDataService.setRequest(resultLink.access_token, resultLink.seller_id)
-      const resultGetDataSeller = await getSellerDataService.doRequest(requestOptionsSellerData, getSellerDataService.asyncCallback)
-      console.log(resultGetDataSeller)
-      res.redirect('/home')
+      const { message } = await getSellerDataService.doRequest(requestOptionsSellerData, getSellerDataService.asyncCallback)
+      console.log(message)
+      res.render('dashboard.ejs', {
+        sellers: req.session.sellers,
+        message,
+        username: req.session.username
+      })
     }
   } catch (err) {
     // Renderizamos el index.ejs con state "Error vinculando" en caso de error
@@ -200,11 +204,9 @@ app.get('/sync', async (req, res) => {
 
   const { publications, requestCounter, accessToken } = await processPublications(req.session.seller_id, req.session.user)
 
-  const { message } = await processOrders(req.session.seller_id, req.session.user)
+  const { message: messageOrders } = await processOrders(req.session.seller_id, req.session.user)
 
-  const resultShippings = await processShippings(req.session.seller_id, req.session.user)
-
-  console.log(resultShippings)
+  const { message: messageShippings, shippings: shippingsNumber } = await processShippings(req.session.seller_id, req.session.user)
 
   if (publications.length) { // Si tenemos ids, realizamos las consultas para obtener la informacion y guardarla en la BD
     publications.forEach(async (id) => {
@@ -214,18 +216,22 @@ app.get('/sync', async (req, res) => {
       console.log(statusCode)
     })
 
-    const syncResult = `La cantidad de publicaciones obtenidas es: ${publications.length}. ${message}`
+    const syncResult = `La cantidad de publicaciones obtenidas es: ${publications.length}. ${messageOrders}. ${messageShippings}: ${shippingsNumber}`
 
     res.json({
       result: syncResult // Respuesta que se envía al js del index
     })
   } else if (!publications.length && requestCounter >= 5) {
+    const syncResult = `Petición invalida al obtener publicaciones. ${messageOrders}. ${messageShippings}: ${shippingsNumber}`
+
     res.json({
-      result: 'Petición invalida al obtener publicaciones' // Respuesta que se envía al js del index
+      result: syncResult // Respuesta que se envía al js del index
     })
   } else {
+    const syncResult = `No se obtuvo ninguna publicación. ${messageOrders}. ${messageShippings}: ${shippingsNumber}`
+
     res.json({
-      result: 'No se obtuvo ninguna publicación' // Respuesta que se envía al js del index
+      result: syncResult // Respuesta que se envía al js del index
     })
   }
 })
