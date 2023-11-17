@@ -1,6 +1,6 @@
 // Imports
 const request = require('request')
-const dbConnector = require('../controllers/dbConnector.js')
+const dbConnector = require('../../controllers/dbConnector.js')
 
 function setRequest (accessToken, sellerId) {
   const headers = {

@@ -12,19 +12,19 @@ const pc = require('picocolors')
 dotenv.config({ path: './src/env/.env' })
 
 // // Importamos nuestros servicios
-const getTokenService = require('./src/services/getTokenFromML.js')
-const getPublicationDataService = require('./src/services/getPublicationDataFromML.js')
-const getUserDataService = require('./src/services/getUserDataFromBD.js')
-const getSellersUserService = require('./src/services/getSellersUserFromBD.js')
-const getSellerDataService = require('./src/services/getSellerDataFromML.js')
+const getTokenService = require('./src/services/seller/getTokenFromML.js')
+const getPublicationDataService = require('./src/services/publication/getPublicationDataFromML.js')
+const getUserDataService = require('./src/services/seller/getUserDataFromBD.js')
+const getSellersUserService = require('./src/services/seller/getSellersUserFromBD.js')
+const getSellerDataService = require('./src/services/seller/getSellerDataFromML.js')
 
 // // Importamos nuestro controlador de BD
 const dbController = require('./src/controllers/dbConnector.js')
 // const { checkSellersDataForHome } = require('./src/services/checkSellersDataForHome.js')
-const { processPublications } = require('./src/services/processPublications.js')
-const { checkSellerData } = require('./src/services/checkSellerData.js')
-const { processOrders } = require('./src/services/processOrders.js')
-const { processShippings } = require('./src/services/processShippings.js')
+const { processPublications } = require('./src/services/publication/processPublications.js')
+const { checkSellerData } = require('./src/services/seller/checkSellerData.js')
+const { processOrders } = require('./src/services/order/processOrders.js')
+const { processShippings } = require('./src/services/shipping/processShippings.js')
 
 // Constantes
 const PORT = 3000 // Puerto de app

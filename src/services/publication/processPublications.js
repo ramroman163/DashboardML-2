@@ -1,6 +1,6 @@
-const getUserDataService = require('./getUserDataFromBD.js')
+const getUserDataService = require('../seller/getUserDataFromBD.js')
 const getPublicationsService = require('./getPublicationsFromML.js')
-const getTokenService = require('./getTokenFromML.js')
+const getTokenService = require('../seller/getTokenFromML.js')
 const pc = require('picocolors')
 
 async function processPublications (sessionSellerId, sessionUserId) {

@@ -1,6 +1,6 @@
 const request = require('request')
 const pc = require('picocolors')
-const { saveShippingData } = require('../controllers/dbConnector')
+const { saveShippingData } = require('../../controllers/dbConnector')
 
 function setOptions (shippingId, accessToken) {
   const headers = {
@@ -25,7 +25,7 @@ async function asyncCallback (error, response, body, sessionUserId) {
     const responseShipping = JSON.parse(body)
 
     if (response.statusCode === 200 && responseShipping.id) {
-      console.log(responseShipping)
+      // console.log(responseShipping)
       const shippingObject = {
         usuario: sessionUserId,
         seller_id: responseShipping.sender_id,
@@ -42,7 +42,7 @@ async function asyncCallback (error, response, body, sessionUserId) {
         address_line: responseShipping.receiver_address?.address_line,
         base_cost: responseShipping.base_cost
       }
-      console.log(shippingObject)
+      // console.log(shippingObject)
       await saveShippingData(shippingObject, sessionUserId)
       return {
         processed: true

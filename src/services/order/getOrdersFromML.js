@@ -1,6 +1,6 @@
 const request = require('request')
 const pc = require('picocolors')
-const getBillingInfoService = require('./getBillingInfo.js')
+const getBillingInfoService = require('../billing/getBillingInfo.js')
 
 function setRequest (accessToken, scrollId, sellerId) {
   const headers = {

@@ -1,10 +1,10 @@
 // Por ahora no se usa...
 
-const getUserDataService = require('./getUserDataFromBD.js')
+const getUserDataService = require('../seller/getUserDataFromBD.js')
 const getOrdersFromMLService = require('./getOrdersFromML.js')
-const getTokenService = require('./getTokenFromML.js')
+const getTokenService = require('../seller/getTokenFromML.js')
 const pc = require('picocolors')
-const { saveOrderData } = require('../controllers/dbConnector.js')
+const { saveOrderData } = require('../../controllers/dbConnector.js')
 
 async function processOrders (sessionSellerId, sessionUserId) {
   console.log(pc.bgMagenta('PROCESO ORDERS'))
@@ -37,7 +37,7 @@ async function processOrders (sessionSellerId, sessionUserId) {
       console.log('Entro al while')
 
       const requestOptionsOrders = getOrdersFromMLService.setRequest(accessToken, scrollId, sellerId)
-
+      console.log(requestOptionsOrders)
       const responseRequestOrders = await getOrdersFromMLService.doAsyncRequest(requestOptionsOrders, getOrdersFromMLService.asyncCallback, accessToken, sessionUserId)
 
       if (commonStatusCodeErrors.includes(responseRequestOrders.statusCode)) {
@@ -80,11 +80,10 @@ async function processOrders (sessionSellerId, sessionUserId) {
       console.log(error)
     }
   }
-  console.log(pc.gray('Orders array: '))
-  console.log(orders)
+  console.log(pc.gray('Orders array: '), orders.length)
 
   if (orders.length) {
-    console.log(pc.bgBlue('Ordenes obtenidas: '), orders)
+    console.log(pc.bgBlue('Ordenes obtenidas: '), orders.length)
 
     await Promise.all(
       orders.map(async (orderObject) => {

@@ -1,5 +1,5 @@
 const getTokenService = require('./getTokenFromML.js')
-const dbController = require('../controllers/dbConnector.js')
+const dbController = require('../../controllers/dbConnector.js')
 
 async function refreshSellerToken (refreshToken, sessionUser) {
   const requestOptionsRefresh = getTokenService.setRequestRefresh(getTokenService.getClientSecret(), refreshToken)

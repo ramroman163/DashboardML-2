@@ -1,6 +1,6 @@
 // Imports
 const request = require('request')
-const dbConnector = require('../controllers/dbConnector.js')
+const dbConnector = require('../../controllers/dbConnector.js')
 
 // Variables
 const client_secret = 'sKAwWnBSHRH4Plg2UmAvPnPYHg9NL9fZ'

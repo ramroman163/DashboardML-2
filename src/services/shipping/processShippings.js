@@ -1,7 +1,7 @@
 const { getShippingIdFromBD } = require('./getShippingDataFromBD.js')
 const getShippingDataFromMLService = require('./getShippingDataFromML.js')
 const pc = require('picocolors')
-const getUserDataService = require('./getUserDataFromBD.js')
+const getUserDataService = require('../seller/getUserDataFromBD.js')
 
 async function processShippings (sessionSellerId, sessionUserId) {
   console.log(pc.bgMagenta('PROCESO SHIPPINGS'))

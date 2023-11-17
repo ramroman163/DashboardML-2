@@ -1,4 +1,4 @@
-const dbConnectorService = require('../controllers/dbConnector.js')
+const dbConnectorService = require('../../controllers/dbConnector.js')
 const pc = require('picocolors')
 
 function getShippingIdFromBD (sessionSellerId, sessionUserId) {

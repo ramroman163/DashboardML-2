@@ -1,4 +1,4 @@
-const dbConnectorService = require('../controllers/dbConnector.js')
+const dbConnectorService = require('../../controllers/dbConnector.js')
 
 // Hacer query: dbConnectorService.connectDbDashboard.query(sql_query, (error, result, filed) => {})
 

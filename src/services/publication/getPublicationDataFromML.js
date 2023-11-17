@@ -1,6 +1,6 @@
 // Imports
 const request = require('request')
-const dbConnector = require('../controllers/dbConnector.js')
+const dbConnector = require('../../controllers/dbConnector.js')
 
 // Funcion para setear las options de la request
 function setRequestDataPublications (access_token, publication_id) {
