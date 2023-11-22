@@ -3,11 +3,11 @@ const request = require('request')
 const dbConnector = require('../../controllers/dbConnector.js')
 
 // Variables
-const client_secret = 'sKAwWnBSHRH4Plg2UmAvPnPYHg9NL9fZ'
+// const client_secret = 'sKAwWnBSHRH4Plg2UmAvPnPYHg9NL9fZ'
 
 // Getter de la variable client_secret
 function getClientSecret () {
-  return client_secret
+  return process.env.CLIENT_SECRET
 }
 
 // Funcion para setear las options de la request

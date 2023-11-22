@@ -1,5 +1,3 @@
-// Por ahora no se usa...
-
 const getUserDataService = require('../seller/getUserDataFromBD.js')
 const getOrdersFromMLService = require('./getOrdersFromML.js')
 const getTokenService = require('../seller/getTokenFromML.js')
@@ -12,7 +10,7 @@ async function processOrders (sessionSellerId, sessionUserId) {
 
   let { token: accessToken, refresh_token: refreshToken, seller_id: sellerId } = userData[0]
 
-  console.log('AT: ', accessToken, 'RT: ', refreshToken, 'UD: ', sellerId)
+  // console.log('AT: ', accessToken, 'RT: ', refreshToken, 'UD: ', sellerId)
 
   if (!accessToken && !refreshToken) {
     console.log('No se obtuvo ninguna credencial para sincronizar.')
@@ -37,7 +35,7 @@ async function processOrders (sessionSellerId, sessionUserId) {
       console.log('Entro al while')
 
       const requestOptionsOrders = getOrdersFromMLService.setRequest(accessToken, scrollId, sellerId)
-      console.log(requestOptionsOrders)
+      // console.log(requestOptionsOrders)
       const responseRequestOrders = await getOrdersFromMLService.doAsyncRequest(requestOptionsOrders, getOrdersFromMLService.asyncCallback, accessToken, sessionUserId)
 
       if (commonStatusCodeErrors.includes(responseRequestOrders.statusCode)) {
@@ -49,7 +47,7 @@ async function processOrders (sessionSellerId, sessionUserId) {
 
         try {
           const responseRefreshToken = await getTokenService.doAsyncRequestRefresh(requestOptionsRefresh, getTokenService.asyncCallbackRefresh, sessionUserId)
-          console.log(responseRefreshToken)
+          // console.log(responseRefreshToken)
           if (responseRefreshToken.access_token) {
             accessToken = responseRefreshToken.access_token
             refreshToken = responseRefreshToken.refresh_token
@@ -67,9 +65,7 @@ async function processOrders (sessionSellerId, sessionUserId) {
       const responseOrders = responseRequestOrders.orderData
       scrollId = responseRequestOrders.scrollId // Seteamos el scroll_id
       console.log('ScrollID: ', pc.bgMagenta(scrollId))
-      // console.log(pc.gray('response array: '))
-      // console.log(responseRequestOrders.orderData)
-      // Concatenamos los ids obtenidos con los existentes
+
       if (responseOrders) {
         orders = [...orders, ...responseOrders]
       }

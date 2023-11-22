@@ -19,11 +19,11 @@ async function asyncCallback (error, result, body) {
     console.error(pc.bgRed('Error en getBillingInfo'))
     throw error
   }
-  console.log(result)
+  // console.log(result)
   try {
     const billingJSON = JSON.parse(body)
-    console.log(pc.bgMagenta('Billing JSON: '))
-    console.log(billingJSON)
+    // console.log(pc.bgMagenta('Billing JSON: '))
+    // console.log(billingJSON)
     if (result.statusCode === 200 && billingJSON.results > 0) {
       console.log(pc.cyan('Billing info: '), billingJSON)
       // return billingJSON

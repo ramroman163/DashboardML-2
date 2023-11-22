@@ -3,7 +3,7 @@ const getPublicationsService = require('./getPublicationsFromML.js')
 const getTokenService = require('../seller/getTokenFromML.js')
 const pc = require('picocolors')
 
-async function processPublications (sessionSellerId, sessionUserId) {
+async function processPublications (sessionSellerId, sessionUserId, eventEmitter) {
   const userData = await getUserDataService.getSellerToken(sessionSellerId)
   console.log(userData)
   let { token: accessToken, refresh_token: refreshToken, seller_id: sellerId } = userData[0]

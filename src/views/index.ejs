@@ -20,14 +20,25 @@
             <button class="button__link btn btn-outline-primary mb-4" type="button">Vincular cuenta nuevamente</button>
         </a>
         <br>
+        
     <% } else {%>
-        <button class="button__sync btn btn-outline-primary" type="button">Sincronizar publicaciones</button>
+        <button class="button__sync btn btn-outline-primary" type="button">Sincronizar información de la cuenta</button>
+        <h5 class="mt-3">Publicaciones: </h5>
         <p class="status__sync mt-3"></p>
+        <div class="progress mt-3" id="progress-container">
+            <div class="progress-bar" id="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <br>
     <% }%>
+    
     <a href="/logout">
         <button class="btn btn-outline-danger" type="button">Cerrar sesión</button>
     </a>
     <script src="setLogoutAuth.js"></script> 
     <script src="sync.js"></script> 
+    <script src="progressController.js"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 </body>
 </html>
