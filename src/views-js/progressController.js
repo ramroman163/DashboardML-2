@@ -1,17 +1,21 @@
 const eventSource = new EventSource('/progress')
-const progressBar = document.getElementById('progress-bar')
+const progressBarPublications = document.querySelector('.progress-bar-publications')
+const progressBarOrders = document.querySelector('.progress-bar-orders')
 
-eventSource.onmessage = (event) => {
-  const data = JSON.parse(event.data)
-  const progress = data.progress
+eventSource.onmessage = async (event) => {
+  const data = await JSON.parse(event.data)
+  let progressPublications = data.data.progressPublications
+  let progressOrders = data.data.progressOrders
 
-  progressBar.style.width = `${progress}%`
-  progressBar.setAttribute('aria-valuenow', progress)
-  progressBar.innerText = `${progress}%`
+  progressBarPublications.style.width = `${progressPublications}%`
+  progressBarPublications.setAttribute('aria-valuenow', progressPublications)
+  progressBarPublications.innerText = `${progressPublications}%`
 
-  console.log(progress)
+  progressBarOrders.style.width = `${progressOrders}%`
+  progressBarOrders.setAttribute('aria-valuenow', progressOrders)
+  progressBarOrders.innerText = `${progressOrders}%`
 
-  if (progress >= 100) {
+  if (progressOrders >= 100 && progressPublications >= 100) {
     eventSource.close()
   }
 }

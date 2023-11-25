@@ -2,6 +2,7 @@ const pc = require('picocolors')
 
 const { checkSellerData } = require('../services/seller/checkSellerData.js')
 const getSellersUserService = require('../services/seller/getSellersUserFromBD.js')
+const { showPublications } = require('./publications.js')
 
 async function getSellersByUser (req, res) {
   // Obtenemos perfiles del usuario que inició sesión
@@ -38,8 +39,18 @@ async function getSeller (req, res) {
     res.render('index.ejs', { state: req.session.nickname, message: 'Error comprobando el usuario' })
   }
 }
+/*
+req.session.seller_id
+*/
+
+async function getPublications (req, res) {
+  const publications = await showPublications(req.session.seller_id)
+  console.log(publications)
+  res.json({ publications })
+}
 
 module.exports = {
   getSeller,
-  getSellersByUser
+  getSellersByUser,
+  getPublications
 }

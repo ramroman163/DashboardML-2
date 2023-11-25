@@ -130,7 +130,7 @@ function savePublication (user, seller_id, item_id, title, status, sub_status, p
                 console.log(err)
                 reject(err)
               } else {
-                console.log('# 2 Resultado de UPDATE de savePublications: ')
+                // console.log('# 2 Resultado de UPDATE de savePublications: ')
                 resolv(result)
               }
             })

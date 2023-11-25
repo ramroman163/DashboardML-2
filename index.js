@@ -6,31 +6,32 @@ const path = require('node:path')
 const session = require('express-session')
 const dotenv = require('dotenv')
 const pc = require('picocolors')
-const http = require('node:http')
+// linea fuera de uso
+// const http = require('node:http')
 const { EventEmitter } = require('node:events')
+
 // Seteamos el archivo .env
 dotenv.config({ path: './src/env/.env' })
 
 // // Importamos nuestros servicios
 const getTokenService = require('./src/services/seller/getTokenFromML.js')
 const getPublicationDataService = require('./src/services/publication/getPublicationDataFromML.js')
-// const getSellersUserService = require('./src/services/seller/getSellersUserFromBD.js')
 const getSellerDataService = require('./src/services/seller/getSellerDataFromML.js')
-
 // Importamos nuestro controlador de BD
 const dbController = require('./src/controllers/dbConnector.js')
 const { processPublications } = require('./src/services/publication/processPublications.js')
-// const { checkSellerData } = require('./src/services/seller/checkSellerData.js')
 const { processOrders } = require('./src/services/order/processOrders.js')
 const { processShippings } = require('./src/services/shipping/processShippings.js')
 
 const sellersController = require('./src/controllers/sellers.js')
 const userController = require('./src/controllers/users.js')
+const progressController = require('./src/controllers/progress.js')
 
 // Constantes
 const PORT = 3000 // Puerto de app
 const app = express() // Aplicación básica de express
-const server = http.createServer(app)
+// linea innecesaria, pero que estaba y no se usaba
+// const server = http.createServer(app)
 
 // Especificamos el manejo de JSON
 app.use(express.urlencoded({ extended: false }))
@@ -48,6 +49,7 @@ app.use(session({
 app.set('view engine', 'ejs')
 app.set('views', path.join(__dirname, 'src/views'))
 app.use(express.static(path.join(__dirname, 'src/views-js')))
+app.use(express.static(path.join(__dirname, 'src/views-css')))
 app.use(express.static(path.join(__dirname, 'src/views')))
 // El uso de path nos permite que esto corra tanto en windows como linux, debe contener un "__dirname"
 
@@ -86,10 +88,13 @@ app.get('/login', (req, res) => {
   res.render('login.ejs')
 })
 
-app.get('/home', sellersController.getSellersByUser)
-app.get('/seller', sellersController.getSeller)
-app.get('/logout', userController.logout)
-app.post('/login', userController.login)
+const eventEmitter = new EventEmitter()
+
+app.get('/home', async (req, res) => await sellersController.getSellersByUser(req, res))
+app.get('/seller', async (req, res) => await sellersController.getSeller(req, res))
+app.get('/logout', async (req, res) => await userController.logout(req, res))
+app.post('/login', async (req, res) => await userController.login(req, res))
+app.get('/progress', async (req, res) => await progressController.handleProgress(req, res, eventEmitter))
 
 // Peticion a /auth para vinculacion
 app.get('/auth', async (req, res) => {
@@ -134,37 +139,57 @@ app.get('/auth', async (req, res) => {
   }
 })
 
-const eventEmitter = new EventEmitter()
+app.get('/publications', async (req, res) => await sellersController.getPublications(req, res))
 
 app.get('/sync', async (req, res) => {
   console.log('Datos en session: ', pc.blue(req.session.seller_id, req.session.user))
 
+  const progressStatus = {
+    progressPublications: 0,
+    progressOrders: 0
+  }
+
+  progressStatus.progressPublications = 0
+  eventEmitter.emit('progress', progressStatus)
+  console.log(pc.bgMagenta(progressStatus.progressPublications))
   // Proceso publicaciones
-  const { publications, requestCounter, accessToken } = await processPublications(req.session.seller_id, req.session.user, eventEmitter)
+  const { publications, requestCounter, accessToken } = await processPublications(req.session.seller_id, req.session.user)
 
   // Proceso ordenes
-  const { message: messageOrders } = await processOrders(req.session.seller_id, req.session.user)
+  const { message: messageOrders } = await processOrders(req.session.seller_id, req.session.user, eventEmitter, progressStatus)
 
   // Proceso shippings
   const { message: messageShippings, shippings: shippingsNumber } = await processShippings(req.session.seller_id, req.session.user)
 
   if (publications.length) { // Si tenemos ids, realizamos las consultas para obtener la informacion y guardarla en la BD
-    let percentPublicationsProcessed = 0
-    publications.forEach(async (id) => {
+    progressStatus.progressPublications += 50
+    eventEmitter.emit('progress', progressStatus)
+    console.log(pc.bgMagenta(progressStatus.progressPublications))
+
+    for (const id of publications) {
       const requestOptionsPublicationData = getPublicationDataService.setRequestDataPublications(accessToken, id)
       const statusCode = await getPublicationDataService.doAsyncRequest(requestOptionsPublicationData, getPublicationDataService.asyncCallback, req.session.user)
-      if (statusCode === 200) {
-        percentPublicationsProcessed += (100 / (publications.length))
-        eventEmitter.emit('progress', percentPublicationsProcessed)
-      }
-      console.log(statusCode)
-    })
-    /* setTimeout(() => {
 
-    }, 200) */
+      if (statusCode === 200) {
+        progressStatus.progressPublications += Math.round(50 / publications.length)
+
+        // Redondea al entero más cercano antes de emitir el evento
+        //const roundedPercent = Math.round(progressStatus.progressPublications)
+
+        await new Promise((resolve) => {
+          setTimeout(() => {
+            eventEmitter.emit('progress', progressStatus)
+            console.log(pc.bgMagenta(progressStatus))
+            resolve()
+          }, 100)
+        })
+      }
+    }
+
+    // eventEmitter.emit('progress', percentPublicationsProcessed)
 
     const syncResult = `La cantidad de publicaciones obtenidas es: ${publications.length}. ${messageOrders}. ${messageShippings}: ${shippingsNumber}`
-
+    console.log(pc.bgRed(pc.bold('Respondo petición de sync')))
     res.json({
       result: syncResult // Respuesta que se envía al js del index
     })
@@ -175,35 +200,12 @@ app.get('/sync', async (req, res) => {
       result: syncResult // Respuesta que se envía al js del index
     })
   } else {
-    const syncResult = `No se obtuvo ninguna publicación. ${messageOrders}. ${messageShippings}: ${shippingsNumber}`
+    percentPublicationsProcessed = 100
+    eventEmitter.emit('progress', percentPublicationsProcessed)
 
+    const syncResult = `No se obtuvo ninguna publicación. ${messageOrders}. ${messageShippings}: ${shippingsNumber}`
     res.json({
       result: syncResult // Respuesta que se envía al js del index
     })
   }
-})
-
-app.get('/progress', (req, res) => {
-  // Maneja el evento de progreso
-  const onProgress = (progress) => {
-    res.write(`data: ${JSON.stringify({ progress })}\n\n`)
-
-    if (progress >= 100) {
-      // Finaliza la conexión cuando el progreso llega al 100%
-      res.end()
-    }
-  }
-
-  // Establece el encabezado necesario para eventos Server-Sent
-  res.setHeader('Content-Type', 'text/event-stream')
-  res.setHeader('Cache-Control', 'no-cache')
-  res.setHeader('Connection', 'keep-alive')
-
-  // Escucha el evento de progreso
-  eventEmitter.on('progress', onProgress)
-
-  // Maneja la desconexión del cliente
-  req.on('close', () => {
-    eventEmitter.off('progress', onProgress)
-  })
 })

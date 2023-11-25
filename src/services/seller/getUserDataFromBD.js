@@ -10,7 +10,7 @@ function getSellerToken (sellerId) {
         console.log(err)
         reject(err)
       } else {
-        console.log('Resultado de funcion getSellerToken (BD): ')
+        // console.log('Resultado de funcion getSellerToken (BD): ')
         resolve(result)
       }
     })

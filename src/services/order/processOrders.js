@@ -4,7 +4,7 @@ const getTokenService = require('../seller/getTokenFromML.js')
 const pc = require('picocolors')
 const { saveOrderData } = require('../../controllers/dbConnector.js')
 
-async function processOrders (sessionSellerId, sessionUserId) {
+async function processOrders (sessionSellerId, sessionUserId, eventEmitter, progressStatus) {
   console.log(pc.bgMagenta('PROCESO ORDERS'))
   const userData = await getUserDataService.getSellerToken(sessionSellerId)
 
@@ -21,7 +21,7 @@ async function processOrders (sessionSellerId, sessionUserId) {
   }
 
   let orders = []
-
+  progressStatus.progressOrders = 0
   let scrollId = '' // Variable que almacenará el scroll_id una vez obtenido
   let requestCounter = 0
   const commonStatusCodeErrors = [403, 400, 401]
@@ -32,10 +32,7 @@ async function processOrders (sessionSellerId, sessionUserId) {
     }
 
     try {
-      console.log('Entro al while')
-
       const requestOptionsOrders = getOrdersFromMLService.setRequest(accessToken, scrollId, sellerId)
-      // console.log(requestOptionsOrders)
       const responseRequestOrders = await getOrdersFromMLService.doAsyncRequest(requestOptionsOrders, getOrdersFromMLService.asyncCallback, accessToken, sessionUserId)
 
       if (commonStatusCodeErrors.includes(responseRequestOrders.statusCode)) {
@@ -47,7 +44,6 @@ async function processOrders (sessionSellerId, sessionUserId) {
 
         try {
           const responseRefreshToken = await getTokenService.doAsyncRequestRefresh(requestOptionsRefresh, getTokenService.asyncCallbackRefresh, sessionUserId)
-          // console.log(responseRefreshToken)
           if (responseRefreshToken.access_token) {
             accessToken = responseRefreshToken.access_token
             refreshToken = responseRefreshToken.refresh_token
@@ -64,10 +60,11 @@ async function processOrders (sessionSellerId, sessionUserId) {
       }
       const responseOrders = responseRequestOrders.orderData
       scrollId = responseRequestOrders.scrollId // Seteamos el scroll_id
-      console.log('ScrollID: ', pc.bgMagenta(scrollId))
 
       if (responseOrders) {
         orders = [...orders, ...responseOrders]
+        progressStatus.progressOrders += 33
+        eventEmitter.emit('progress', progressStatus)
       }
 
       if (scrollId === null || scrollId === undefined) break // Cuando no hay más paginación salimos del bucle

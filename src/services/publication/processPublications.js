@@ -3,9 +3,9 @@ const getPublicationsService = require('./getPublicationsFromML.js')
 const getTokenService = require('../seller/getTokenFromML.js')
 const pc = require('picocolors')
 
-async function processPublications (sessionSellerId, sessionUserId, eventEmitter) {
+async function processPublications (sessionSellerId, sessionUserId) {
   const userData = await getUserDataService.getSellerToken(sessionSellerId)
-  console.log(userData)
+  // console.log(userData)
   let { token: accessToken, refresh_token: refreshToken, seller_id: sellerId } = userData[0]
 
   // let accessToken = userData[0].token // let refresh_token = userData[0].refresh_token // let seller_id = userData[0].seller_id
@@ -38,7 +38,7 @@ async function processPublications (sessionSellerId, sessionUserId, eventEmitter
     }
 
     try {
-      console.log('Entro al while')
+      // console.log('Entro al while')
       // Seteamos las opciones de la consulta de publicaciones con el token e id del usuario
       // Aclaramos que en la primera iteración del bucle el scroll_id será un string vacio ""
       const requestOptionsPublications = getPublicationsService.setRequestPublications(accessToken, sellerId, scrollId)

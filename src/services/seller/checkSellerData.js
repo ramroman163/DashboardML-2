@@ -20,7 +20,7 @@ async function checkSellerData (sessionSellerId, sessionUser) {
     try {
       const authSellerData = await getUserDataService.getSellerToken(sessionSellerId) // Traemos data de auth del usuario
 
-      console.log(pc.magenta(`Auth data del seller ${sessionSellerId}`), authSellerData)
+      // console.log(pc.magenta(`Auth data del seller ${sessionSellerId}`), authSellerData)
 
       const { token: accessToken, refresh_token: refreshToken, seller_id: sellerId } = authSellerData[0]
 

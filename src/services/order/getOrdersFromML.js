@@ -25,7 +25,7 @@ async function asyncCallback (error, response, body, accessToken, sessionUserId)
 
     if (response.statusCode === 200 && responseOrders.results.length > 0) {
       const orderData = []
-      console.log('ScrollID: ', pc.bgYellow(responseOrders.paging.scroll_id))
+      // console.log('ScrollID: ', pc.bgYellow(responseOrders.paging.scroll_id))
       await Promise.all(
         responseOrders.results.map(async (orderInfo) => {
           const orderObject = {
