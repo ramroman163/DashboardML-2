@@ -24,6 +24,7 @@ async function asyncCallback (error, response, body, accessToken, sessionUserId)
     const responseOrders = JSON.parse(body)
 
     if (response.statusCode === 200 && responseOrders.results.length > 0) {
+      console.log(responseOrders)
       const orderData = []
       // console.log('ScrollID: ', pc.bgYellow(responseOrders.paging.scroll_id))
       await Promise.all(
@@ -59,6 +60,8 @@ async function asyncCallback (error, response, body, accessToken, sessionUserId)
       return {
         scrollId: responseOrders.paging.scroll_id,
         statusCode: response.statusCode,
+        partialOrders: responseOrders.paging.limit,
+        totalOrders: responseOrders.paging.total,
         orderData
       }
     } else {

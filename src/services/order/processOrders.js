@@ -59,11 +59,13 @@ async function processOrders (sessionSellerId, sessionUserId, eventEmitter, prog
         }
       }
       const responseOrders = responseRequestOrders.orderData
+      const totalOrders = responseRequestOrders.totalOrders
+      const partialOrders = responseRequestOrders.partialOrders
       scrollId = responseRequestOrders.scrollId // Seteamos el scroll_id
 
       if (responseOrders) {
         orders = [...orders, ...responseOrders]
-        progressStatus.progressOrders += 33
+        progressStatus.progressOrders += Math.round(100 / (totalOrders / partialOrders))
         eventEmitter.emit('progress', progressStatus)
       }
 

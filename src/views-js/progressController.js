@@ -1,11 +1,12 @@
 const eventSource = new EventSource('/progress')
-const progressBarPublications = document.querySelector('.progress-bar-publications')
-const progressBarOrders = document.querySelector('.progress-bar-orders')
 
 eventSource.onmessage = async (event) => {
+  const progressBarPublications = document.querySelector('.progress-bar-publications')
+  const progressBarOrders = document.querySelector('.progress-bar-orders')
+
   const data = await JSON.parse(event.data)
-  let progressPublications = data.data.progressPublications
-  let progressOrders = data.data.progressOrders
+  const progressPublications = data.data.progressPublications
+  const progressOrders = data.data.progressOrders
 
   progressBarPublications.style.width = `${progressPublications}%`
   progressBarPublications.setAttribute('aria-valuenow', progressPublications)

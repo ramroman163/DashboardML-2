@@ -149,17 +149,15 @@ app.get('/sync', async (req, res) => {
     progressOrders: 0
   }
 
+  let messageOrders = ''
+  let messageShippings = ''
+  let shippingsNumber = ''
+
   progressStatus.progressPublications = 0
   eventEmitter.emit('progress', progressStatus)
   console.log(pc.bgMagenta(progressStatus.progressPublications))
   // Proceso publicaciones
   const { publications, requestCounter, accessToken } = await processPublications(req.session.seller_id, req.session.user)
-
-  // Proceso ordenes
-  const { message: messageOrders } = await processOrders(req.session.seller_id, req.session.user, eventEmitter, progressStatus)
-
-  // Proceso shippings
-  const { message: messageShippings, shippings: shippingsNumber } = await processShippings(req.session.seller_id, req.session.user)
 
   if (publications.length) { // Si tenemos ids, realizamos las consultas para obtener la informacion y guardarla en la BD
     progressStatus.progressPublications += 50
@@ -171,22 +169,29 @@ app.get('/sync', async (req, res) => {
       const statusCode = await getPublicationDataService.doAsyncRequest(requestOptionsPublicationData, getPublicationDataService.asyncCallback, req.session.user)
 
       if (statusCode === 200) {
-        progressStatus.progressPublications += Math.round(50 / publications.length)
+        progressStatus.progressPublications += Math.round(50 / (publications.length))
 
-        // Redondea al entero más cercano antes de emitir el evento
-        //const roundedPercent = Math.round(progressStatus.progressPublications)
+        if (progressStatus.progressPublications >= 100) {
+          progressStatus.progressPublications = 100
+        }
 
         await new Promise((resolve) => {
           setTimeout(() => {
             eventEmitter.emit('progress', progressStatus)
-            console.log(pc.bgMagenta(progressStatus))
+            console.log(pc.bgMagenta(progressStatus.progressPublications))
             resolve()
           }, 100)
         })
       }
     }
 
-    // eventEmitter.emit('progress', percentPublicationsProcessed)
+    // Proceso ordenes
+    const { message: messageResponseOrders } = await processOrders(req.session.seller_id, req.session.user, eventEmitter, progressStatus)
+    messageOrders = messageResponseOrders
+    // Proceso shippings
+    const { message: messageResponseShippings, shippings: shippingsResponseNumber } = await processShippings(req.session.seller_id, req.session.user)
+    messageShippings = messageResponseShippings
+    shippingsNumber = shippingsResponseNumber
 
     const syncResult = `La cantidad de publicaciones obtenidas es: ${publications.length}. ${messageOrders}. ${messageShippings}: ${shippingsNumber}`
     console.log(pc.bgRed(pc.bold('Respondo petición de sync')))
@@ -200,8 +205,8 @@ app.get('/sync', async (req, res) => {
       result: syncResult // Respuesta que se envía al js del index
     })
   } else {
-    percentPublicationsProcessed = 100
-    eventEmitter.emit('progress', percentPublicationsProcessed)
+    progressStatus.progressPublications = 100
+    eventEmitter.emit('progress', progressStatus)
 
     const syncResult = `No se obtuvo ninguna publicación. ${messageOrders}. ${messageShippings}: ${shippingsNumber}`
     res.json({
