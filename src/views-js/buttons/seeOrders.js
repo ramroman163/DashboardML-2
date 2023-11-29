@@ -19,7 +19,7 @@ async function verOrdenes () {
     const row = document.createElement('tr')
     row.innerHTML = `
           <td>${item.order_id}</td>
-          <td>${item.date_closed === null ? 'N/A' : item.date_closed}</td>
+          <td>${item.date_closed === 'null' ? 'N/A' : item.date_closed}</td>
           <td>${item.item_title}</td>
           <td>${item.item_quantity}</td>
           <td>${item.total_amount}</td>

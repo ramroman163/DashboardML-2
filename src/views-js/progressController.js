@@ -5,6 +5,7 @@ eventSource.onmessage = async (event) => {
   const progressBarOrders = document.querySelector('.progress-bar-orders')
 
   const data = await JSON.parse(event.data)
+  console.log(data)
   const progressPublications = data.data.progressPublications
   const progressOrders = data.data.progressOrders
 
@@ -16,13 +17,17 @@ eventSource.onmessage = async (event) => {
   progressBarOrders.setAttribute('aria-valuenow', progressOrders)
   progressBarOrders.innerText = `${progressOrders}%`
 
-  if (progressOrders >= 100 && progressPublications >= 100) {
-    progressBarOrders.classList.remove('progress-bar-striped')
-    progressBarOrders.classList.add('bg-success')
-
+  if (progressPublications >= 100) {
     progressBarPublications.classList.remove('progress-bar-striped')
     progressBarPublications.classList.add('bg-success')
+  }
 
+  if (progressOrders >= 100) {
+    progressBarOrders.classList.remove('progress-bar-striped')
+    progressBarOrders.classList.add('bg-success')
+  }
+
+  if (progressOrders >= 100 && progressPublications >= 100) {
     eventSource.close()
   }
 }
