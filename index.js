@@ -95,6 +95,8 @@ app.get('/seller', async (req, res) => await sellersController.getSeller(req, re
 app.get('/logout', async (req, res) => await userController.logout(req, res))
 app.post('/login', async (req, res) => await userController.login(req, res))
 app.get('/progress', async (req, res) => await progressController.handleProgress(req, res, eventEmitter))
+app.get('/publications', async (req, res) => await sellersController.getPublications(req, res))
+app.get('/orders', async (req, res) => await sellersController.getOrders(req, res))
 
 // Peticion a /auth para vinculacion
 app.get('/auth', async (req, res) => {
@@ -138,8 +140,6 @@ app.get('/auth', async (req, res) => {
     })
   }
 })
-
-app.get('/publications', async (req, res) => await sellersController.getPublications(req, res))
 
 app.get('/sync', async (req, res) => {
   console.log('Datos en session: ', pc.blue(req.session.seller_id, req.session.user))
@@ -200,15 +200,18 @@ app.get('/sync', async (req, res) => {
     })
   } else if (!publications.length && requestCounter >= 5) {
     const syncResult = `Petición invalida al obtener publicaciones. ${messageOrders}. ${messageShippings}: ${shippingsNumber}`
-
+    // manejar error
     res.json({
       result: syncResult // Respuesta que se envía al js del index
     })
   } else {
     progressStatus.progressPublications = 100
+    progressStatus.progressOrders = 100
+
     eventEmitter.emit('progress', progressStatus)
 
-    const syncResult = `No se obtuvo ninguna publicación. ${messageOrders}. ${messageShippings}: ${shippingsNumber}`
+    // const syncResult = `No se obtuvo ninguna publicación. ${messageOrders}. ${messageShippings}: ${shippingsNumber}`
+    const syncResult = 'No se obtuvo información de la cuenta.'
     res.json({
       result: syncResult // Respuesta que se envía al js del index
     })

@@ -124,7 +124,7 @@ function savePublication (user, seller_id, item_id, title, status, sub_status, p
         } else {
           if (result.length > 0) {
             console.log(`Ya existe el item "${item_id}"`)
-            const updateQuery = `UPDATE ml_items SET title = "${title}", status = "${status}", sub_status = "${sub_status}", price = ${price}, original_price = ${original_price}, available_quantity = ${available_quantity}, thumbnail = "${thumbnail}", permalink = "${permalink}", listing_type_id = "${listing_type_id}", logistic_type = "${logistic_type}", self_service = ${0}, free_shipping = ${free_shipping}, mandatory_free_shipping = ${mandatory_free_shipping}, local_pick_up = ${local_pick_up} WHERE item_id = "${item_id}"`
+            const updateQuery = `UPDATE ml_items SET title = "${title}", status = "${status}", sub_status = "${sub_status}", price = ${price}, original_price = ${original_price}, available_quantity = ${available_quantity}, thumbnail = "${thumbnail}", permalink = "${permalink}", listing_type_id = "${listing_type_id}", logistic_type = "${logistic_type}", self_service = ${0}, free_shipping = ${free_shipping}, mandatory_free_shipping = ${mandatory_free_shipping}, local_pick_up = ${local_pick_up}, last_sincro = NOW() WHERE item_id = "${item_id}"`
             connectorDbDashboard.query(updateQuery, (err, result, filed) => {
               if (err) {
                 console.log(err)
@@ -136,7 +136,7 @@ function savePublication (user, seller_id, item_id, title, status, sub_status, p
             })
           } else {
             console.log(`Todavía no existe el item "${item_id}"`)
-            const insertQuery = `INSERT INTO ml_items (id, usuario, seller_id, item_id, title, status, sub_status, price, original_price, available_quantity, thumbnail, permalink, listing_type_id, logistic_type, self_service, free_shipping, mandatory_free_shipping, local_pick_up) VALUES (${null}, ${user}, "${seller_id}", "${item_id}", "${title}", "${status}", "${sub_status}", ${price}, ${original_price}, ${available_quantity}, "${thumbnail}", "${permalink}", "${listing_type_id}", "${logistic_type}", ${0}, ${free_shipping}, ${mandatory_free_shipping}, ${local_pick_up})`
+            const insertQuery = `INSERT INTO ml_items (id, usuario, seller_id, item_id, title, status, sub_status, price, original_price, available_quantity, thumbnail, permalink, listing_type_id, logistic_type, self_service, free_shipping, mandatory_free_shipping, local_pick_up, last_sincro) VALUES (${null}, ${user}, "${seller_id}", "${item_id}", "${title}", "${status}", "${sub_status}", ${price}, ${original_price}, ${available_quantity}, "${thumbnail}", "${permalink}", "${listing_type_id}", "${logistic_type}", ${0}, ${free_shipping}, ${mandatory_free_shipping}, ${local_pick_up}, NOW())`
             connectorDbDashboard.query(insertQuery, (err, result, filed) => {
               if (err) {
                 console.log(err)
@@ -214,8 +214,8 @@ function saveSellerData (sellerDataObject) {
 function saveOrderData (orderDataObject) {
   const sqlFind = `SELECT id FROM ml_orders WHERE order_id = '${orderDataObject.id}' AND item_id = '${orderDataObject.item_id}'`
 
-  connectorDbDashboard.query(sqlFind, (error, result, filed) => {
-    if (error) {
+  connectorDbDashboard.query(sqlFind, (err, result, filed) => {
+    if (err) {
       console.error('Error obteniendo order existente', error)
     }
 
@@ -241,7 +241,8 @@ function saveOrderData (orderDataObject) {
         buyer_first_name,
         buyer_last_name,
         billing_doc_type,
-        billing_doc_number
+        billing_doc_number,
+        last_sincro
       ) VALUES (
         ${orderDataObject.user},
         '${orderDataObject.seller_id}',
@@ -260,7 +261,8 @@ function saveOrderData (orderDataObject) {
         '${orderDataObject.buyer_first_name}',
         '${orderDataObject.buyer_last_name}',
         '${orderDataObject.billing_doc_type}',
-        '${orderDataObject.billing_doc_number}'
+        '${orderDataObject.billing_doc_number}',
+        NOW()
       )
       `
       connectorDbDashboard.query(sql, (err, result, filed) => {
@@ -294,13 +296,15 @@ function updateOrderData (orderDataObject, id) {
     buyer_first_name = '${orderDataObject.buyer_first_name}',
     buyer_last_name = '${orderDataObject.buyer_last_name}',
     billing_doc_type = '${orderDataObject.billing_doc_type}',
-    billing_doc_number = '${orderDataObject.billing_doc_number}'
+    billing_doc_number = '${orderDataObject.billing_doc_number}',
+    last_sincro = NOW() 
   WHERE id = ${id}
   `
 
-  connectorDbDashboard.query(sql, (error, result, filed) => {
-    if (error) {
+  connectorDbDashboard.query(sql, (err, result, filed) => {
+    if (err) {
       console.error(pc.bgRed('Error actualizando order'))
+      console.error(err)
     }
     console.log(pc.bgGreen('Order actualizada'))
   })

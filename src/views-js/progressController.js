@@ -17,6 +17,12 @@ eventSource.onmessage = async (event) => {
   progressBarOrders.innerText = `${progressOrders}%`
 
   if (progressOrders >= 100 && progressPublications >= 100) {
+    progressBarOrders.classList.remove('progress-bar-striped')
+    progressBarOrders.classList.add('bg-success')
+
+    progressBarPublications.classList.remove('progress-bar-striped')
+    progressBarPublications.classList.add('bg-success')
+
     eventSource.close()
   }
 }

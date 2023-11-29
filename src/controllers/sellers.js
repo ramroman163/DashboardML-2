@@ -1,8 +1,10 @@
 const pc = require('picocolors')
 
-const { checkSellerData } = require('../services/seller/checkSellerData.js')
 const getSellersUserService = require('../services/seller/getSellersUserFromBD.js')
+
+const { checkSellerData } = require('../services/seller/checkSellerData.js')
 const { getSellerPublications } = require('../services/publication/getSellerPublications.js')
+const { getSellerOrders } = require('../services/order/getSellerOrders.js')
 
 async function getSellersByUser (req, res) {
   // Obtenemos perfiles del usuario que inició sesión
@@ -42,12 +44,19 @@ async function getSeller (req, res) {
 
 async function getPublications (req, res) {
   const publications = await getSellerPublications(req.session.seller_id)
-  console.log(publications)
+  // console.log(publications)
   res.json({ publications })
+}
+
+async function getOrders (req, res) {
+  const orders = await getSellerOrders(req.session.seller_id)
+  // console.log(orders)
+  res.json({ orders })
 }
 
 module.exports = {
   getSeller,
   getSellersByUser,
-  getPublications
+  getPublications,
+  getOrders
 }

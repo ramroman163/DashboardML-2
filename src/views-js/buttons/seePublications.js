@@ -2,11 +2,19 @@ async function verPublicaciones () {
   const tableSection = document.querySelector('.table_section')
   tableSection.classList.remove('hidden')
 
+  const tablePublications = document.querySelector('.table-publications')
+  tablePublications.classList.remove('hidden')
+
+  const titleTablePublications = document.querySelector('.table-publications-title')
+  titleTablePublications.classList.remove('hidden')
+
   const responsePub = await fetch('http://localhost:3000/publications')
   const data = await responsePub.json()
-  // console.log(data.publications)
-  const tableBody = document.querySelector('.table__body')
 
+  const tableBody = document.querySelector('.table__body-publications')
+
+  tableBody.innerHTML = ''
+  console.log(data.publications)
   data.publications.forEach((item) => {
     const row = document.createElement('tr')
     row.innerHTML = `
